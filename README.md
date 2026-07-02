@@ -1,5 +1,7 @@
 # js-loyihalar-2
-Bu loyihani talabalar yoki xodimlar ro'yxatini boshqarish misolida ko'rib chiqamiz. Kodni bitta index.html fayliga saqlab brauzerda ishlatishingiz mumkin:
+Mana, siz aytgan barcha shartlarga javob beradigan — pitssalarni tanlash, savatchada miqdorni o'zgartirish, o'chirish, localStorage bilan ishlash va buyurtmani tasdiqlash modal oynasiga ega to'liq HTML, CSS va JavaScript kodi.
+
+Buni bitta faylga (masalan, pizza.html) saqlab, brauzerda ishlatishingiz mumkin:
 
 HTML
 <!DOCTYPE html>
@@ -7,312 +9,404 @@ HTML
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ma'lumotlar Bazasi (CRUD)</title>
+    <title>Pizza Buyurtma Tizimi</title>
     <style>
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: 'Segoe UI', Arial, sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
         body {
-            background-color: #f5f7fa;
+            background-color: #f8f9fa;
             color: #333;
-            padding: 30px 15px;
+            padding: 20px;
         }
 
         .container {
-            max-width: 900px;
+            max-width: 1200px;
             margin: 0 auto;
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 30px;
         }
 
-        h2 {
-            text-align: center;
-            margin-bottom: 25px;
+        @media (max-width: 900px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        h1, h2 {
+            margin-bottom: 20px;
             color: #2c3e50;
         }
 
-        /* Forma dizayni */
-        .form-container {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-            margin-bottom: 30px;
+        .header-title {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 10px 0;
+            color: #e74c3c;
         }
 
-        .form-grid {
+        /* Pizza Menyusi */
+        .menu-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .pizza-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            border: 1px solid #eee;
+        }
+
+        .pizza-emoji {
+            font-size: 50px;
+            margin-bottom: 10px;
+        }
+
+        .pizza-name {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .pizza-price {
+            color: #e74c3c;
+            font-weight: bold;
+            font-size: 16px;
             margin-bottom: 15px;
         }
 
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: 600;
-            font-size: 14px;
-        }
-
-        .form-group input {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            font-size: 14px;
-        }
-
         button {
-            padding: 10px 20px;
+            padding: 10px 15px;
             border: none;
-            border-radius: 4px;
+            border-radius: 6px;
             cursor: pointer;
             font-weight: bold;
-            font-size: 14px;
             transition: background 0.2s;
         }
 
-        .btn-submit {
-            background-color: #3498db;
+        .btn-add {
+            background-color: #ff9f43;
             color: white;
             width: 100%;
         }
 
-        .btn-submit:hover { background-color: #2980b9; }
-        
-        .btn-edit { background-color: #f1c40f; color: #333; margin-right: 5px; }
-        .btn-edit:hover { background-color: #d4ac0d; }
+        .btn-add:hover { background-color: #ee5253; }
 
-        .btn-delete { background-color: #e74c3c; color: white; }
-        .btn-delete:hover { background-color: #c0392b; }
-
-        .btn-cancel { background-color: #95a5a6; color: white; width: 100%; margin-top: 5px;}
-        .btn-cancel:hover { background-color: #7f8c8d; }
-
-        /* Jadval dizayni */
-        .table-container {
+        /* Savatcha Bo'limi */
+        .cart-box {
             background: white;
             padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-            overflow-x: auto;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+            height: fit-content;
+            position: sticky;
+            top: 20px;
         }
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            text-align: left;
+        .cart-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #eee;
         }
 
-        th, td {
-            padding: 12px 15px;
-            border-bottom: 1px solid #ddd;
+        .cart-item-info h4 {
+            font-size: 15px;
+            margin-bottom: 4px;
         }
 
-        th {
-            background-color: #f8f9fa;
-            color: #2c3e50;
-        }
-
-        tr:hover { background-color: #fdfdfd; }
-
-        /* Bo'sh xabar */
-        .empty-message {
-            text-align: center;
+        .cart-item-info p {
             color: #7f8c8d;
-            padding: 30px;
+            font-size: 13px;
+        }
+
+        .quantity-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-qty {
+            background-color: #eee;
+            padding: 5px 10px;
+            font-size: 14px;
+        }
+
+        .btn-qty:hover { background-color: #ddd; }
+
+        .btn-del {
+            background-color: #ff6b6b;
+            color: white;
+            padding: 5px 8px;
+            font-size: 12px;
+        }
+
+        .btn-del:hover { background-color: #ee5253; }
+
+        .cart-total {
+            margin-top: 20px;
+            font-size: 18px;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .btn-order {
+            background-color: #10ac84;
+            color: white;
+            width: 100%;
+            margin-top: 20px;
+            padding: 12px;
+            font-size: 16px;
+        }
+
+        .btn-order:hover { background-color: #0bd38a; }
+        .btn-order:disabled { background-color: #ccc; cursor: not-allowed; }
+
+        .empty-cart-msg {
+            color: #7f8c8d;
+            text-align: center;
+            padding: 20px 0;
             font-style: italic;
         }
 
-        .hidden { display: none; }
+        /* Modal (Tasdiqlash oynasi) */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            z-index: 1000;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            transform: scale(0.8);
+            transition: transform 0.3s ease;
+        }
+
+        .modal-overlay.active .modal-content {
+            transform: scale(1);
+        }
+
+        .modal-content h3 {
+            color: #10ac84;
+            margin-bottom: 15px;
+        }
+
+        .modal-content p {
+            margin-bottom: 20px;
+            color: #555;
+            line-height: 1.5;
+        }
+
+        .btn-close-modal {
+            background-color: #2c3e50;
+            color: white;
+            width: 100%;
+        }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2 id="formTitle">Yangi foydalanuvchi qo'shish</h2>
-    
-    <div class="form-container">
-        <form id="userForm">
-            <input type="hidden" id="userId">
-            <div class="form-grid">
-                <div class="form-group">
-                    <label>Ism va Familiya</label>
-                    <input type="text" id="fullName" required placeholder="Masalan: Ali Valiyev">
-                </div>
-                <div class="form-group">
-                    <label>Kasbi / Lavozimi</label>
-                    <input type="text" id="job" required placeholder="Masalan: Dasturchi">
-                </div>
-                <div class="form-group">
-                    <label>Telefon raqami</label>
-                    <input type="text" id="phone" required placeholder="+998 90 123 45 67">
-                </div>
-            </div>
-            <button type="submit" class="btn-submit" id="submitBtn">Qo'shish</button>
-            <button type="button" class="btn-cancel hidden" id="cancelBtn">Tahrirlashni bekor qilish</button>
-        </form>
+    <div class="header-title">
+        <h1>🍕 Pizzeria Interaktiv Menyusi</h1>
     </div>
 
-    <h2>Ro'yxat</h2>
-    
-    <div class="table-container">
-        <table id="userTable">
-            <thead>
-                <tr>
-                    <th>#</th>
-                    <th>Ism va Familiya</th>
-                    <th>Kasbi</th>
-                    <th>Telefon</th>
-                    <th>Amallar</th>
-                </tr>
-            </thead>
-            <tbody id="tableBody">
-                </tbody>
-        </table>
-        <div id="emptyMessage" class="empty-message">Hozircha hech qanday yozuv kiritilmagan.</div>
+    <div>
+        <h2>Menyu</h2>
+        <div class="menu-grid" id="menuGrid">
+            </div>
+    </div>
+
+    <div class="cart-box">
+        <h2>Savatchangiz</h2>
+        <div id="cartItemsContainer">
+            </div>
+        <div class="cart-total">
+            <span>Jami summa:</span>
+            <span id="cartTotalAmount">0 so'm</span>
+        </div>
+        <button class="btn-order" id="orderBtn" disabled>Buyurtma berish</button>
+    </div>
+</div>
+
+<div class="modal-overlay" id="orderModal">
+    <div class="modal-content">
+        <h3>🎉 Buyurtma qabul qilindi!</h3>
+        <p id="modalMessage">Sizning buyurtmangiz tayyorlanishga topshirildi.</p>
+        <button class="btn-close-modal" id="closeModalBtn">Yopish</button>
     </div>
 </div>
 
 <script>
-    // LocalStorage'dan ma'lumotlarni o'qish
-    let users = JSON.parse(localStorage.getItem('crud_users')) || [];
-    let isEditing = false;
+    // Pitssalar ro'yxati (Baza)
+    const pizzaMenu = [
+        { id: 1, name: "Margarita", price: 55000, emoji: "🧀" },
+        { id: 2, name: "Pepperoni", price: 65000, emoji: "🍕" },
+        { id: 3, name: "Tovuqli va Qo'ziqorinli", price: 70000, emoji: "🍗" },
+        { id: 4, name: "To'rt fasl (4 Seasons)", price: 75000, emoji: "🍃" },
+        { id: 5, name: "Go'shtli (Meat Feast)", price: 80000, emoji: "🥩" },
+        { id: 6, name: "Meksikancha (Achchiq)", price: 68000, emoji: "🌶️" }
+    ];
 
-    const userForm = document.getElementById('userForm');
-    const tableBody = document.getElementById('tableBody');
-    const emptyMessage = document.getElementById('emptyMessage');
-    const userTable = document.getElementById('userTable');
-    
-    const userIdInput = document.getElementById('userId');
-    const fullNameInput = document.getElementById('fullName');
-    const jobInput = document.getElementById('job');
-    const phoneInput = document.getElementById('phone');
-    
-    const submitBtn = document.getElementById('submitBtn');
-    const cancelBtn = document.getElementById('cancelBtn');
-    const formTitle = document.getElementById('formTitle');
+    // Savatchani localStorage'dan yuklash yoki yangi massiv ochish
+    let cart = JSON.parse(localStorage.getItem('pizza_cart')) || [];
 
-    // Jadvalni yangilash funksiyasi
-    function renderTable() {
-        tableBody.innerHTML = '';
+    const menuGrid = document.getElementById('menuGrid');
+    const cartItemsContainer = document.getElementById('cartItemsContainer');
+    const cartTotalAmount = document.getElementById('cartTotalAmount');
+    const orderBtn = document.getElementById('orderBtn');
+    const orderModal = document.getElementById('orderModal');
+    const closeModalBtn = document.getElementById('closeModalBtn');
+    const modalMessage = document.getElementById('modalMessage');
 
-        if (users.length === 0) {
-            userTable.classList.add('hidden');
-            emptyMessage.classList.remove('hidden');
-            return;
-        }
-
-        userTable.classList.remove('hidden');
-        emptyMessage.classList.add('hidden');
-
-        users.forEach((user, index) => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td>${index + 1}</td>
-                <td>${user.fullName}</td>
-                <td>${user.job}</td>
-                <td>${user.phone}</td>
-                <td>
-                    <button class="btn-edit" onclick="editUser('${user.id}')">Tahrirlash</button>
-                    <button class="btn-delete" onclick="deleteUser('${user.id}')">O'chirish</button>
-                </td>
+    // Menyuni ekranga chiqarish
+    function renderMenu() {
+        menuGrid.innerHTML = '';
+        pizzaMenu.forEach(pizza => {
+            const card = document.createElement('div');
+            card.className = 'pizza-card';
+            card.innerHTML = `
+                <div class="pizza-emoji">${pizza.emoji}</div>
+                <div class="pizza-name">${pizza.name}</div>
+                <div class="pizza-price">${pizza.price.toLocaleString()} so'm</div>
+                <button class="btn-add" onclick="addToCart(${pizza.id})">Savatchaga qo'shish</button>
             `;
-            tableBody.appendChild(tr);
+            menuGrid.appendChild(card);
         });
     }
 
-    // Ma'lumot qo'shish yoki tahrirlash (Submit)
-    userForm.addEventListener('submit', (e) => {
-        e.preventDefault();
+    // Savatchaga qo'shish
+    function addToCart(pizzaId) {
+        const foundPizza = pizzaMenu.find(p => p.id === pizzaId);
+        const cartItem = cart.find(item => item.id === pizzaId);
 
-        const userData = {
-            fullName: fullNameInput.value.trim(),
-            job: jobInput.value.trim(),
-            phone: phoneInput.value.trim()
-        };
-
-        if (isEditing) {
-            // Tahrirlash rejimi
-            const id = userIdInput.value;
-            users = users.map(user => user.id === id ? { ...user, ...userData } : user);
-            resetForm();
+        if (cartItem) {
+            cartItem.quantity += 1;
         } else {
-            // Yangi qo'shish rejimi
-            userData.id = Date.now().toString(); // Noyob ID yaratish
-            users.push(userData);
+            cart.push({
+                ...foundPizza,
+                quantity: 1
+            });
+        }
+        updateCart();
+    }
+
+    // Miqdorni o'zgartirish (+/-)
+    function changeQuantity(pizzaId, action) {
+        const cartItem = cart.find(item => item.id === pizzaId);
+        if (!cartItem) return;
+
+        if (action === 'increase') {
+            cartItem.quantity += 1;
+        } else if (action === 'decrease') {
+            cartItem.quantity -= 1;
+            if (cartItem.quantity === 0) {
+                removeFromCart(pizzaId);
+                return;
+            }
+        }
+        updateCart();
+    }
+
+    // Mahsulotni o'chirish
+    function removeFromCart(pizzaId) {
+        cart = cart.filter(item => item.id !== pizzaId);
+        updateCart();
+    }
+
+    // Savatchani yangilash (Hisob-kitob va render)
+    function updateCart() {
+        // LocalStorage'ga saqlash
+        localStorage.setItem('pizza_cart', JSON.stringify(cart));
+        
+        cartItemsContainer.innerHTML = '';
+        
+        if (cart.length === 0) {
+            cartItemsContainer.innerHTML = '<div class="empty-cart-msg">Savatchangiz hozircha bo\'sh</div>';
+            cartTotalAmount.innerText = "0 so'm";
+            orderBtn.disabled = true;
+            return;
         }
 
-        saveToLocalStorage();
-        renderTable();
-        userForm.reset();
+        let totalSum = 0;
+
+        cart.forEach(item => {
+            const itemTotal = item.price * item.quantity;
+            totalSum += itemTotal;
+
+            const div = document.createElement('div');
+            div.className = 'cart-item';
+            div.innerHTML = `
+                <div class="cart-item-info">
+                    <h4>${item.name}</h4>
+                    <p>${item.price.toLocaleString()} x ${item.quantity} = ${itemTotal.toLocaleString()} so'm</p>
+                </div>
+                <div class="quantity-controls">
+                    <button class="btn-qty" onclick="changeQuantity(${item.id}, 'decrease')">-</button>
+                    <span>${item.quantity}</span>
+                    <button class="btn-qty" onclick="changeQuantity(${item.id}, 'increase')">+</button>
+                    <button class="btn-del" onclick="removeFromCart(${item.id})">🗑️</button>
+                </div>
+            `;
+            cartItemsContainer.appendChild(div);
+        });
+
+        cartTotalAmount.innerText = `${totalSum.toLocaleString()} so'm`;
+        orderBtn.disabled = false;
+    }
+
+    // Buyurtma berish (Modal oynani ochish)
+    orderBtn.addEventListener('click', () => {
+        const total = cartTotalAmount.innerText;
+        modalMessage.innerHTML = `Siz muvaffaqiyatli buyurtma berdingiz!<br><b>Jami summa: ${total}</b><br>Kuryer tez orada siz bilan bog'lanadi.`;
+        orderModal.classList.add('active');
     });
 
-    // Tahrirlash tugmasi bosilganda (Ma'lumotni formaga yuklash)
-    function editUser(id) {
-        const user = users.find(u => u.id === id);
-        if (!user) return;
+    // Modalni yopish va savatchani tozalash
+    closeModalBtn.addEventListener('click', () => {
+        orderModal.classList.remove('active');
+        cart = []; // Buyurtmadan so'ng savat tozalanadi
+        updateCart();
+    });
 
-        userIdInput.value = user.id;
-        fullNameInput.value = user.fullName;
-        jobInput.value = user.job;
-        phoneInput.value = user.phone;
-
-        isEditing = true;
-        formTitle.innerText = "Yozuvni tahrirlash";
-        submitBtn.innerText = "Saqlash";
-        cancelBtn.classList.remove('hidden');
-        window.scrollTo({ top: 0, behavior: 'smooth' }); // Sahifani yuqoriga chiqaradi
-    }
-
-    // O'chirish funksiyasi (Tasdiqlash so'raladi)
-    function deleteUser(id) {
-        const confirmDelete = confirm("Haqiqatan ham ushbu yozuvni o'chirib tashlamoqchimisiz?");
-        if (confirmDelete) {
-            users = users.filter(user => user.id !== id);
-            
-            // Agar tahrirlanayotgan yozuv o'chib ketsa, formani tozalaydi
-            if (userIdInput.value === id) resetForm();
-            
-            saveToLocalStorage();
-            renderTable();
-        }
-    }
-
-    // Tahrirlashni bekor qilish
-    cancelBtn.addEventListener('click', resetForm);
-
-    function resetForm() {
-        isEditing = false;
-        userForm.reset();
-        userIdInput.value = '';
-        formTitle.innerText = "Yangi foydalanuvchi qo'shish";
-        submitBtn.innerText = "Qo'shish";
-        cancelBtn.classList.add('hidden');
-    }
-
-    // LocalStorage'ga yozish
-    function saveToLocalStorage() {
-        localStorage.setItem('crud_users', JSON.stringify(users));
-    }
-
-    // Dastur ishga tushganda jadvalni chizish
-    renderTable();
+    // Dastlabki yuklash
+    renderMenu();
+    updateCart();
 </script>
 
 </body>
 </html>
-Kod qanday ishlaydi va shartlar bajarilishi:
-Yangi yozuv qo'shish: Forma to'ldirilib Qo'shish bosilganda users massiviga yangi obyekt qo'shiladi va jadval yangilanadi.
-
-Jadvalda ko'rsatish: renderTable() funksiyasi orqali massivdagi barcha elementlar jadval ko'rinishida (<tr> va <td> lar orqali) generatsiya qilinadi.
-
-Yozuvni tahrirlash: Tahrirlash tugmasi bosilganda, JavaScript ushbu element ma'lumotlarini formadagi inputlarga qayta yuklaydi. Formaning ko'rinishi o'zgaradi ("Saqlash" rejimiga o'tadi) hamda tahrirlashni bekor qilish imkoni paydo bo'ladi.
-
-O'chirish (Tasdiqlash): O'chirish tugmasi bosilganda brauzerning ichki confirm() oynasi ochiladi. Foydalanuvchi "OK" bossagina o'chadi.
-
-localStorage: Barcha amallardan keyin (qo'shish, o'chirish, tahrirlash) saveToLocalStorage() funksiyasi ishlaydi, shuning uchun brauzer yopilib ochilsa ham ma'lumot saqlanib qoladi.
-
-Jadval bo'sh bo'lgandagi xabar: Agar massivda ma'lumot bo'lmasa, CSS orqali jadval yashiriladi va "Hozircha hech qanday yozuv kiritilmagan." degan maxsus blok ko'rinadi.
+Kod qanday talablarni bajardi?
+Menyu va savatchaga qo'shish: pizzaMenu obyekti asosida kartochkalar yaratildi. "Savatchaga qo'shish" tugmasi bosilganda mahsulot savatchaga o'tadi.
