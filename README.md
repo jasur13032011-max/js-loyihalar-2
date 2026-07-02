@@ -1,5 +1,5 @@
 # js-loyihalar-2
-Rasmlar sifatli chiqishi uchun Unsplash servisining tayyor rasmlaridan foydalanildi.
+Bu loyihani talabalar yoki xodimlar ro'yxatini boshqarish misolida ko'rib chiqamiz. Kodni bitta index.html fayliga saqlab brauzerda ishlatishingiz mumkin:
 
 HTML
 <!DOCTYPE html>
@@ -7,259 +7,312 @@ HTML
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Foto Galereya</title>
+    <title>Ma'lumotlar Bazasi (CRUD)</title>
     <style>
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Segoe UI', Arial, sans-serif;
         }
 
         body {
-            background-color: #111;
-            color: #fff;
-            padding: 40px 20px;
+            background-color: #f5f7fa;
+            color: #333;
+            padding: 30px 15px;
         }
 
-        h1 {
-            text-align: center;
-            margin-bottom: 40px;
-            font-weight: 300;
-            letter-spacing: 2px;
-        }
-
-        /* Galereya Setkasi */
-        .gallery-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 20px;
-            max-width: 1200px;
+        .container {
+            max-width: 900px;
             margin: 0 auto;
         }
 
-        .gallery-item {
-            overflow: hidden;
+        h2 {
+            text-align: center;
+            margin-bottom: 25px;
+            color: #2c3e50;
+        }
+
+        /* Forma dizayni */
+        .form-container {
+            background: white;
+            padding: 20px;
             border-radius: 8px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-            cursor: pointer;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            height: 200px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            margin-bottom: 30px;
         }
 
-        .gallery-item img {
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .form-group input {
             width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transition: transform 0.5s ease;
-        }
-
-        .gallery-item:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 25px rgba(255,255,255,0.2);
-        }
-
-        .gallery-item:hover img {
-            transform: scale(1.08);
-        }
-
-        /* Overlay (Lightbox) */
-        .overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.92);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-            
-            /* Silliq fade-in/out uchun */
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.4s ease;
-        }
-
-        .overlay.active {
-            opacity: 1;
-            pointer-events: auto;
-        }
-
-        .overlay-content {
-            position: relative;
-            max-width: 85%;
-            max-height: 85%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .overlay-img {
-            max-width: 100%;
-            max-height: 85vh;
+            padding: 10px;
+            border: 1px solid #ccc;
             border-radius: 4px;
-            box-shadow: 0 0 30px rgba(255,255,255,0.1);
-            
-            /* Rasm almashgandagi silliq effekt */
-            transition: transform 0.3s ease, opacity 0.3s ease;
+            font-size: 14px;
         }
 
-        /* Navigatsiya tugmalari */
-        .close-btn {
-            position: absolute;
-            top: -40px;
-            right: 0;
-            font-size: 35px;
-            color: #fff;
-            cursor: pointer;
-            transition: color 0.2s;
-        }
-
-        .nav-btn {
-            position: absolute;
-            top: 50%;
-            transform: translateY(-50%);
-            background: rgba(255, 255, 255, 0.1);
-            color: white;
+        button {
+            padding: 10px 20px;
             border: none;
-            font-size: 24px;
-            padding: 15px 20px;
+            border-radius: 4px;
             cursor: pointer;
-            border-radius: 50%;
-            transition: background 0.3s, color 0.3s;
-            user-select: none;
+            font-weight: bold;
+            font-size: 14px;
+            transition: background 0.2s;
         }
 
-        .nav-btn:hover {
-            background: rgba(255, 255, 255, 0.9);
-            color: #000;
+        .btn-submit {
+            background-color: #3498db;
+            color: white;
+            width: 100%;
         }
 
-        .prev-btn { left: -80px; }
-        .next-btn { right: -80px; }
+        .btn-submit:hover { background-color: #2980b9; }
+        
+        .btn-edit { background-color: #f1c40f; color: #333; margin-right: 5px; }
+        .btn-edit:hover { background-color: #d4ac0d; }
 
-        /* Mobil qurilmalar uchun tugmalarni moslashtirish */
-        @media (max-width: 768px) {
-            .prev-btn { left: 10px; background: rgba(0,0,0,0.5); }
-            .next-btn { right: 10px; background: rgba(0,0,0,0.5); }
-            .close-btn { top: 15px; right: 20px; position: fixed; z-index: 1001; }
+        .btn-delete { background-color: #e74c3c; color: white; }
+        .btn-delete:hover { background-color: #c0392b; }
+
+        .btn-cancel { background-color: #95a5a6; color: white; width: 100%; margin-top: 5px;}
+        .btn-cancel:hover { background-color: #7f8c8d; }
+
+        /* Jadval dizayni */
+        .table-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            overflow-x: auto;
         }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        th, td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #f8f9fa;
+            color: #2c3e50;
+        }
+
+        tr:hover { background-color: #fdfdfd; }
+
+        /* Bo'sh xabar */
+        .empty-message {
+            text-align: center;
+            color: #7f8c8d;
+            padding: 30px;
+            font-style: italic;
+        }
+
+        .hidden { display: none; }
     </style>
 </head>
 <body>
 
-    <h1>🌌 Go'zal Tabiat Galereyasi</h1>
-
-    <div class="gallery-grid">
-        <div class="gallery-item" data-index="0"><img src="https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=800" alt="Tog'lar"></div>
-        <div class="gallery-item" data-index="1"><img src="https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=800" alt="Tuman"></div>
-        <div class="gallery-item" data-index="2"><img src="https://images.unsplash.com/photo-1501854140801-50d01698950b?w=800" alt="Yashillik"></div>
-        <div class="gallery-item" data-index="3"><img src="https://images.unsplash.com/photo-1447752875215-b2761acb3c5d?w=800" alt="O'rmon"></div>
-        <div class="gallery-item" data-index="4"><img src="https://images.unsplash.com/photo-1472214222541-d510753a8707?w=800" alt="Vodiy"></div>
-        <div class="gallery-item" data-index="5"><img src="https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=800" alt="Quyosh nuri"></div>
+<div class="container">
+    <h2 id="formTitle">Yangi foydalanuvchi qo'shish</h2>
+    
+    <div class="form-container">
+        <form id="userForm">
+            <input type="hidden" id="userId">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Ism va Familiya</label>
+                    <input type="text" id="fullName" required placeholder="Masalan: Ali Valiyev">
+                </div>
+                <div class="form-group">
+                    <label>Kasbi / Lavozimi</label>
+                    <input type="text" id="job" required placeholder="Masalan: Dasturchi">
+                </div>
+                <div class="form-group">
+                    <label>Telefon raqami</label>
+                    <input type="text" id="phone" required placeholder="+998 90 123 45 67">
+                </div>
+            </div>
+            <button type="submit" class="btn-submit" id="submitBtn">Qo'shish</button>
+            <button type="button" class="btn-cancel hidden" id="cancelBtn">Tahrirlashni bekor qilish</button>
+        </form>
     </div>
 
-    <div class="overlay" id="lightbox">
-        <div class="overlay-content">
-            <span class="close-btn" id="closeBtn">&times;</span>
-            <button class="nav-btn prev-btn" id="prevBtn">&#10094;</button>
-            <img src="" alt="Katta rasm" class="overlay-img" id="lightboxImg">
-            <button class="nav-btn next-btn" id="nextBtn">&#10095;</button>
-        </div>
+    <h2>Ro'yxat</h2>
+    
+    <div class="table-container">
+        <table id="userTable">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Ism va Familiya</th>
+                    <th>Kasbi</th>
+                    <th>Telefon</th>
+                    <th>Amallar</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody">
+                </tbody>
+        </table>
+        <div id="emptyMessage" class="empty-message">Hozircha hech qanday yozuv kiritilmagan.</div>
     </div>
+</div>
 
 <script>
-    const galleryItems = document.querySelectorAll('.gallery-item');
-    const lightbox = document.getElementById('lightbox');
-    const lightboxImg = document.getElementById('lightboxImg');
-    const closeBtn = document.getElementById('closeBtn');
-    const prevBtn = document.getElementById('prevBtn');
-    const nextBtn = document.getElementById('nextBtn');
+    // LocalStorage'dan ma'lumotlarni o'qish
+    let users = JSON.parse(localStorage.getItem('crud_users')) || [];
+    let isEditing = false;
 
-    let currentIndex = 0;
+    const userForm = document.getElementById('userForm');
+    const tableBody = document.getElementById('tableBody');
+    const emptyMessage = document.getElementById('emptyMessage');
+    const userTable = document.getElementById('userTable');
+    
+    const userIdInput = document.getElementById('userId');
+    const fullNameInput = document.getElementById('fullName');
+    const jobInput = document.getElementById('job');
+    const phoneInput = document.getElementById('phone');
+    
+    const submitBtn = document.getElementById('submitBtn');
+    const cancelBtn = document.getElementById('cancelBtn');
+    const formTitle = document.getElementById('formTitle');
 
-    // Rasmlar ro'yxatini massiv qilib olish
-    const imagesSrc = Array.from(galleryItems).map(item => item.querySelector('img').src);
+    // Jadvalni yangilash funksiyasi
+    function renderTable() {
+        tableBody.innerHTML = '';
 
-    // Lightboxni ochish funksiyasi
-    function openLightbox(index) {
-        currentIndex = index;
-        lightboxImg.src = imagesSrc[currentIndex];
-        lightbox.classList.add('active');
-        document.body.style.overflow = 'hidden'; // Orqa fon skroll bo'lmasligi uchun
-    }
-
-    // Lightboxni yopish funksiyasi
-    function closeLightbox() {
-        lightbox.classList.remove('active');
-        document.body.style.overflow = 'auto';
-    }
-
-    // Keyingi rasmga o'tish
-    function nextImage() {
-        currentIndex = (currentIndex + 1) % imagesSrc.length; // Oxiriga kelsa boshiga qaytadi
-        updateImage();
-    }
-
-    // Oldingi rasmga o'tish
-    function prevImage() {
-        currentIndex = (currentIndex - 1 + imagesSrc.length) % imagesSrc.length; // Boshida tursa oxiriga o'tadi
-        updateImage();
-    }
-
-    // Rasmni silliq almashtirish effekti
-    function updateImage() {
-        lightboxImg.style.opacity = '0';
-        lightboxImg.style.transform = 'scale(0.95)';
-        
-        setTimeout(() => {
-            lightboxImg.src = imagesSrc[currentIndex];
-            lightboxImg.style.opacity = '1';
-            lightboxImg.style.transform = 'scale(1)';
-        }, 150);
-    }
-
-    // Event Listeners (Hodisalarni tinglash)
-    galleryItems.forEach((item, index) => {
-        item.addEventListener('click', () => openLightbox(index));
-    });
-
-    closeBtn.addEventListener('click', closeLightbox);
-    nextBtn.addEventListener('click', nextImage);
-    prevBtn.addEventListener('click', prevImage);
-
-    // Overlayning bo'sh joyi bosilganda ham yopilsin
-    lightbox.addEventListener('click', (e) => {
-        if (e.target === lightbox) closeLightbox();
-    });
-
-    // Klaviatura navigatsiyasi (←  →  Escape)
-    document.addEventListener('keydown', (e) => {
-        if (!lightbox.classList.contains('active')) return; // Faqat overlay ochiqligida ishlaydi
-
-        if (e.key === 'Escape') {
-            closeLightbox();
-        } else if (e.key === 'ArrowRight') {
-            nextImage();
-        } else if (e.key === 'ArrowLeft') {
-            prevImage();
+        if (users.length === 0) {
+            userTable.classList.add('hidden');
+            emptyMessage.classList.remove('hidden');
+            return;
         }
+
+        userTable.classList.remove('hidden');
+        emptyMessage.classList.add('hidden');
+
+        users.forEach((user, index) => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${index + 1}</td>
+                <td>${user.fullName}</td>
+                <td>${user.job}</td>
+                <td>${user.phone}</td>
+                <td>
+                    <button class="btn-edit" onclick="editUser('${user.id}')">Tahrirlash</button>
+                    <button class="btn-delete" onclick="deleteUser('${user.id}')">O'chirish</button>
+                </td>
+            `;
+            tableBody.appendChild(tr);
+        });
+    }
+
+    // Ma'lumot qo'shish yoki tahrirlash (Submit)
+    userForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+
+        const userData = {
+            fullName: fullNameInput.value.trim(),
+            job: jobInput.value.trim(),
+            phone: phoneInput.value.trim()
+        };
+
+        if (isEditing) {
+            // Tahrirlash rejimi
+            const id = userIdInput.value;
+            users = users.map(user => user.id === id ? { ...user, ...userData } : user);
+            resetForm();
+        } else {
+            // Yangi qo'shish rejimi
+            userData.id = Date.now().toString(); // Noyob ID yaratish
+            users.push(userData);
+        }
+
+        saveToLocalStorage();
+        renderTable();
+        userForm.reset();
     });
+
+    // Tahrirlash tugmasi bosilganda (Ma'lumotni formaga yuklash)
+    function editUser(id) {
+        const user = users.find(u => u.id === id);
+        if (!user) return;
+
+        userIdInput.value = user.id;
+        fullNameInput.value = user.fullName;
+        jobInput.value = user.job;
+        phoneInput.value = user.phone;
+
+        isEditing = true;
+        formTitle.innerText = "Yozuvni tahrirlash";
+        submitBtn.innerText = "Saqlash";
+        cancelBtn.classList.remove('hidden');
+        window.scrollTo({ top: 0, behavior: 'smooth' }); // Sahifani yuqoriga chiqaradi
+    }
+
+    // O'chirish funksiyasi (Tasdiqlash so'raladi)
+    function deleteUser(id) {
+        const confirmDelete = confirm("Haqiqatan ham ushbu yozuvni o'chirib tashlamoqchimisiz?");
+        if (confirmDelete) {
+            users = users.filter(user => user.id !== id);
+            
+            // Agar tahrirlanayotgan yozuv o'chib ketsa, formani tozalaydi
+            if (userIdInput.value === id) resetForm();
+            
+            saveToLocalStorage();
+            renderTable();
+        }
+    }
+
+    // Tahrirlashni bekor qilish
+    cancelBtn.addEventListener('click', resetForm);
+
+    function resetForm() {
+        isEditing = false;
+        userForm.reset();
+        userIdInput.value = '';
+        formTitle.innerText = "Yangi foydalanuvchi qo'shish";
+        submitBtn.innerText = "Qo'shish";
+        cancelBtn.classList.add('hidden');
+    }
+
+    // LocalStorage'ga yozish
+    function saveToLocalStorage() {
+        localStorage.setItem('crud_users', JSON.stringify(users));
+    }
+
+    // Dastur ishga tushganda jadvalni chizish
+    renderTable();
 </script>
 
 </body>
 </html>
-Belgilangan funksiyalar qanday bajarildi?
-6 ta rasm: Unsplash'dan olingan 6 ta tayyor rasm gallery-grid ichiga joylandi.
+Kod qanday ishlaydi va shartlar bajarilishi:
+Yangi yozuv qo'shish: Forma to'ldirilib Qo'shish bosilganda users massiviga yangi obyekt qo'shiladi va jadval yangilanadi.
 
-Overlay ochilishi: Har bir rasm bosilganda lightbox elementiga .active klassi qo'shiladi va katta rasm yuklanadi.
+Jadvalda ko'rsatish: renderTable() funksiyasi orqali massivdagi barcha elementlar jadval ko'rinishida (<tr> va <td> lar orqali) generatsiya qilinadi.
 
-Oldinga/orqaga navigatsiya: &#10094; va &#10095; belgilari yordamida tugmalar yaratildi va cheksiz aylanish tsikli (% operatori orqali) o'rnatildi.
+Yozuvni tahrirlash: Tahrirlash tugmasi bosilganda, JavaScript ushbu element ma'lumotlarini formadagi inputlarga qayta yuklaydi. Formaning ko'rinishi o'zgaradi ("Saqlash" rejimiga o'tadi) hamda tahrirlashni bekor qilish imkoni paydo bo'ladi.
 
-Yopilish: X tugmasi, Escape tugmasi yoki rasmning tashqarisidagi qora maydon bosilganda overlay yopiladi.
+O'chirish (Tasdiqlash): O'chirish tugmasi bosilganda brauzerning ichki confirm() oynasi ochiladi. Foydalanuvchi "OK" bossagina o'chadi.
 
-CSS Animatsiya: .overlay klassida transition: opacity 0.4s ease orqali silliq paydo bo'lish (fade-in) va yo'qolish (fade-out) ta'minlandi.
+localStorage: Barcha amallardan keyin (qo'shish, o'chirish, tahrirlash) saveToLocalStorage() funksiyasi ishlaydi, shuning uchun brauzer yopilib ochilsa ham ma'lumot saqlanib qoladi.
 
-Keyboard Navigatsiya: JS'dagi keydown hodisasi orqali ArrowRight (o'ngga), ArrowLeft (chapga) va
+Jadval bo'sh bo'lgandagi xabar: Agar massivda ma'lumot bo'lmasa, CSS orqali jadval yashiriladi va "Hozircha hech qanday yozuv kiritilmagan." degan maxsus blok ko'rinadi.
