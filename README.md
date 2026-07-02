@@ -1,7 +1,5 @@
 # js-loyihalar-2
-Mana, siz aytgan barcha funksiyalarga ega (film qo'shish, o'chirish, localStorage bilan ishlash, real vaqtda qidirish va janr bo'yicha filtrlash) to'liq HTML, CSS va JavaScript kodi.
-
-Barcha kodlarni bitta faylga (masalan, index.html deb nomlab) saqlab, brauzerda ochishingiz mumkin.
+Rasmlar sifatli chiqishi uchun Unsplash servisining tayyor rasmlaridan foydalanildi.
 
 HTML
 <!DOCTYPE html>
@@ -9,7 +7,7 @@ HTML
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kinolar Olami</title>
+    <title>Foto Galereya</title>
     <style>
         * {
             box-sizing: border-box;
@@ -19,293 +17,249 @@ HTML
         }
 
         body {
-            background-color: #f4f7f6;
-            color: #333;
-            padding: 20px;
-        }
-
-        .container {
-            max-width: 1100px;
-            margin: 0 auto;
+            background-color: #111;
+            color: #fff;
+            padding: 40px 20px;
         }
 
         h1 {
             text-align: center;
-            margin-bottom: 30px;
-            color: #2c3e50;
-        }
-
-        /* Forma va boshqaruv bo'limi */
-        .controls-section {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
             margin-bottom: 40px;
+            font-weight: 300;
+            letter-spacing: 2px;
         }
 
-        @media (max-width: 768px) {
-            .controls-section {
-                grid-template-columns: 1fr;
-            }
+        /* Galereya Setkasi */
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
         }
 
-        .card-form, .filter-box {
-            background: white;
-            padding: 20px;
+        .gallery-item {
+            overflow: hidden;
             border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            height: 200px;
         }
 
-        .form-group {
-            margin-bottom: 15px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: 600;
-        }
-
-        .form-group input, .form-group select {
+        .gallery-item img {
             width: 100%;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            font-size: 14px;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
         }
 
-        button {
-            background-color: #2ecc71;
+        .gallery-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(255,255,255,0.2);
+        }
+
+        .gallery-item:hover img {
+            transform: scale(1.08);
+        }
+
+        /* Overlay (Lightbox) */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.92);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            
+            /* Silliq fade-in/out uchun */
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.4s ease;
+        }
+
+        .overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .overlay-content {
+            position: relative;
+            max-width: 85%;
+            max-height: 85%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .overlay-img {
+            max-width: 100%;
+            max-height: 85vh;
+            border-radius: 4px;
+            box-shadow: 0 0 30px rgba(255,255,255,0.1);
+            
+            /* Rasm almashgandagi silliq effekt */
+            transition: transform 0.3s ease, opacity 0.3s ease;
+        }
+
+        /* Navigatsiya tugmalari */
+        .close-btn {
+            position: absolute;
+            top: -40px;
+            right: 0;
+            font-size: 35px;
+            color: #fff;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .nav-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255, 255, 255, 0.1);
             color: white;
             border: none;
-            padding: 12px 20px;
-            border-radius: 4px;
+            font-size: 24px;
+            padding: 15px 20px;
             cursor: pointer;
-            font-size: 16px;
-            width: 100%;
-            font-weight: bold;
-            transition: background 0.3s;
+            border-radius: 50%;
+            transition: background 0.3s, color 0.3s;
+            user-select: none;
         }
 
-        button:hover {
-            background-color: #27ae60;
+        .nav-btn:hover {
+            background: rgba(255, 255, 255, 0.9);
+            color: #000;
         }
 
-        /* Filmlar kartochkalari */
-        .movies-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            gap: 20px;
-        }
+        .prev-btn { left: -80px; }
+        .next-btn { right: -80px; }
 
-        .movie-card {
-            background: white;
-            border-radius: 8px;
-            padding: 20px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            position: relative;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            border-top: 5px solid #3498db;
-        }
-
-        .movie-title {
-            font-size: 18px;
-            font-weight: bold;
-            margin-bottom: 10px;
-            color: #2c3e50;
-        }
-
-        .movie-info {
-            font-size: 14px;
-            color: #7f8c8d;
-            margin-bottom: 5px;
-        }
-
-        .movie-rating {
-            display: inline-block;
-            background: #f1c40f;
-            color: #fff;
-            padding: 2px 8px;
-            border-radius: 4px;
-            font-weight: bold;
-            font-size: 12px;
-            margin-top: 10px;
-            align-self: flex-start;
-        }
-
-        .delete-btn {
-            background-color: #e74c3c;
-            margin-top: 15px;
-            padding: 8px;
-            font-size: 14px;
-        }
-
-        .delete-btn:hover {
-            background-color: #c0392b;
-        }
-
-        .no-movies {
-            grid-column: 1 / -1;
-            text-align: center;
-            color: #7f8c8d;
-            font-size: 18px;
-            padding: 40px;
+        /* Mobil qurilmalar uchun tugmalarni moslashtirish */
+        @media (max-width: 768px) {
+            .prev-btn { left: 10px; background: rgba(0,0,0,0.5); }
+            .next-btn { right: 10px; background: rgba(0,0,0,0.5); }
+            .close-btn { top: 15px; right: 20px; position: fixed; z-index: 1001; }
         }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h1>🎬 Kinolar Katalogi</h1>
+    <h1>🌌 Go'zal Tabiat Galereyasi</h1>
 
-    <div class="controls-section">
-        <div class="card-form">
-            <h3>Yangi film qo'shish</h3>
-            <form id="movieForm" style="margin-top: 15px;">
-                <div class="form-group">
-                    <label>Film nomi</label>
-                    <input type="text" id="title" required placeholder="Masalan: Interstellar">
-                </div>
-                <div class="form-group">
-                    <label>Janri</label>
-                    <select id="genre" required>
-                        <option value="">Janrni tanlang</option>
-                        <option value="Fantastika">Fantastika</option>
-                        <option value="Boeyevik">Boeyevik</option>
-                        <option value="Drama">Drama</option>
-                        <option value="Komediya">Komediya</option>
-                        <option value="Daxshat">Daxshat</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Yili</label>
-                    <input type="number" id="year" min="1800" max="2026" required placeholder="Masalan: 2014">
-                </div>
-                <div class="form-group">
-                    <label>Reyting (IMDb)</label>
-                    <input type="number" id="rating" min="0" max="10" step="0.1" required placeholder="Masalan: 8.6">
-                </div>
-                <button type="submit">Qo'shish</button>
-            </form>
-        </div>
+    <div class="gallery-grid">
+        <div class="gallery-item" data-index="0"><img src="https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=800" alt="Tog'lar"></div>
+        <div class="gallery-item" data-index="1"><img src="https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=800" alt="Tuman"></div>
+        <div class="gallery-item" data-index="2"><img src="https://images.unsplash.com/photo-1501854140801-50d01698950b?w=800" alt="Yashillik"></div>
+        <div class="gallery-item" data-index="3"><img src="https://images.unsplash.com/photo-1447752875215-b2761acb3c5d?w=800" alt="O'rmon"></div>
+        <div class="gallery-item" data-index="4"><img src="https://images.unsplash.com/photo-1472214222541-d510753a8707?w=800" alt="Vodiy"></div>
+        <div class="gallery-item" data-index="5"><img src="https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=800" alt="Quyosh nuri"></div>
+    </div>
 
-        <div class="filter-box">
-            <h3>Qidiruv va Filtrlash</h3>
-            <div class="form-group" style="margin-top: 15px;">
-                <label>Nomi bo'yicha qidirish (Real vaqtda)</label>
-                <input type="text" id="searchInp" placeholder="Film nomini yozing...">
-            </div>
-            <div class="form-group">
-                <label>Janr bo'yicha saralash</label>
-                <select id="filterGenre">
-                    <option value="all">Barcha janrlar</option>
-                    <option value="Fantastika">Fantastika</option>
-                    <option value="Boeyevik">Boeyevik</option>
-                    <option value="Drama">Drama</option>
-                    <option value="Komediya">Komediya</option>
-                    <option value="Daxshat">Daxshat</option>
-                </select>
-            </div>
+    <div class="overlay" id="lightbox">
+        <div class="overlay-content">
+            <span class="close-btn" id="closeBtn">&times;</span>
+            <button class="nav-btn prev-btn" id="prevBtn">&#10094;</button>
+            <img src="" alt="Katta rasm" class="overlay-img" id="lightboxImg">
+            <button class="nav-btn next-btn" id="nextBtn">&#10095;</button>
         </div>
     </div>
 
-    <div class="movies-grid" id="moviesGrid"></div>
-</div>
-
 <script>
-    // LocalStorage'dan ma'lumotlarni olish yoki bo'sh massiv yaratish
-    let movies = JSON.parse(localStorage.getItem('movies')) || [];
+    const galleryItems = document.querySelectorAll('.gallery-item');
+    const lightbox = document.getElementById('lightbox');
+    const lightboxImg = document.getElementById('lightboxImg');
+    const closeBtn = document.getElementById('closeBtn');
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
 
-    const movieForm = document.getElementById('movieForm');
-    const moviesGrid = document.getElementById('moviesGrid');
-    const searchInp = document.getElementById('searchInp');
-    const filterGenre = document.getElementById('filterGenre');
+    let currentIndex = 0;
 
-    // Filmlarni ekranga chiqarish funksiyasi
-    function displayMovies(moviesToRender) {
-        moviesGrid.innerHTML = '';
+    // Rasmlar ro'yxatini massiv qilib olish
+    const imagesSrc = Array.from(galleryItems).map(item => item.querySelector('img').src);
 
-        if (moviesToRender.length === 0) {
-            moviesGrid.innerHTML = '<div class="no-movies">Filmlar topilmadi yoki hali qo\'shilmagan.</div>';
-            return;
-        }
-
-        moviesToRender.forEach(movie => {
-            const card = document.createElement('div');
-            card.className = 'movie-card';
-            card.innerHTML = `
-                <div>
-                    <div class="movie-title">${movie.title}</div>
-                    <div class="movie-info"><strong>Janr:</strong> ${movie.genre}</div>
-                    <div class="movie-info"><strong>Yil:</strong> ${movie.year}</div>
-                    <div class="movie-rating">★ ${movie.rating}</div>
-                </div>
-                <button class="delete-btn" onclick="deleteMovie(${movie.id})">O'chirish</button>
-            `;
-            moviesGrid.appendChild(card);
-        });
+    // Lightboxni ochish funksiyasi
+    function openLightbox(index) {
+        currentIndex = index;
+        lightboxImg.src = imagesSrc[currentIndex];
+        lightbox.classList.add('active');
+        document.body.style.overflow = 'hidden'; // Orqa fon skroll bo'lmasligi uchun
     }
 
-    // Yangi film qo'shish
-    movieForm.addEventListener('submit', (e) => {
-        e.preventDefault();
+    // Lightboxni yopish funksiyasi
+    function closeLightbox() {
+        lightbox.classList.remove('active');
+        document.body.style.overflow = 'auto';
+    }
 
-        const newMovie = {
-            id: Date.now(), // Noyob ID yaratish uchun vaqtdan foydalanamiz
-            title: document.getElementById('title').value,
-            genre: document.getElementById('genre').value,
-            year: document.getElementById('year').value,
-            rating: document.getElementById('rating').value
-        };
+    // Keyingi rasmga o'tish
+    function nextImage() {
+        currentIndex = (currentIndex + 1) % imagesSrc.length; // Oxiriga kelsa boshiga qaytadi
+        updateImage();
+    }
 
-        movies.push(newMovie);
-        saveAndRender();
-        movieForm.reset(); // Formani tozalash
+    // Oldingi rasmga o'tish
+    function prevImage() {
+        currentIndex = (currentIndex - 1 + imagesSrc.length) % imagesSrc.length; // Boshida tursa oxiriga o'tadi
+        updateImage();
+    }
+
+    // Rasmni silliq almashtirish effekti
+    function updateImage() {
+        lightboxImg.style.opacity = '0';
+        lightboxImg.style.transform = 'scale(0.95)';
+        
+        setTimeout(() => {
+            lightboxImg.src = imagesSrc[currentIndex];
+            lightboxImg.style.opacity = '1';
+            lightboxImg.style.transform = 'scale(1)';
+        }, 150);
+    }
+
+    // Event Listeners (Hodisalarni tinglash)
+    galleryItems.forEach((item, index) => {
+        item.addEventListener('click', () => openLightbox(index));
     });
 
-    // Filmni o'chirish
-    function deleteMovie(id) {
-        movies = movies.filter(movie => movie.id !== id);
-        saveAndRender();
-    }
+    closeBtn.addEventListener('click', closeLightbox);
+    nextBtn.addEventListener('click', nextImage);
+    prevBtn.addEventListener('click', prevImage);
 
-    // Ma'lumotni saqlash va yangilash
-    function saveAndRender() {
-        localStorage.setItem('movies', JSON.stringify(movies));
-        filterAndSearchMovies();
-    }
+    // Overlayning bo'sh joyi bosilganda ham yopilsin
+    lightbox.addEventListener('click', (e) => {
+        if (e.target === lightbox) closeLightbox();
+    });
 
-    // Real vaqtda Qidiruv va Filtrlash funksiyasi
-    function filterAndSearchMovies() {
-        const searchText = searchInp.value.toLowerCase();
-        const selectedGenre = filterGenre.value;
+    // Klaviatura navigatsiyasi (←  →  Escape)
+    document.addEventListener('keydown', (e) => {
+        if (!lightbox.classList.contains('active')) return; // Faqat overlay ochiqligida ishlaydi
 
-        const filtered = movies.filter(movie => {
-            const matchesSearch = movie.title.toLowerCase().includes(searchText);
-            const matchesGenre = selectedGenre === 'all' || movie.genre === selectedGenre;
-            return matchesSearch && matchesGenre;
-        });
-
-        displayMovies(filtered);
-    }
-
-    // Hodisalarni tinglash (Qidiruv va Filtr uchun)
-    searchInp.addEventListener('input', filterAndSearchMovies);
-    filterGenre.addEventListener('change', filterAndSearchMovies);
-
-    // Dastur ilk bor yuklanganda filmlarni ko'rsatish
-    displayMovies(movies);
+        if (e.key === 'Escape') {
+            closeLightbox();
+        } else if (e.key === 'ArrowRight') {
+            nextImage();
+        } else if (e.key === 'ArrowLeft') {
+            prevImage();
+        }
+    });
 </script>
 
 </body>
 </html>
-Kod qanday ishlaydi?
-Kartochka ko'rinishi: CSS Grid yordamida filmlar chiroyli va moslashuvchan (responsive) kartochka shaklida chiqadi.
+Belgilangan funksiyalar qanday bajarildi?
+6 ta rasm: Unsplash'dan olingan 6 ta tayyor rasm gallery-grid ichiga joylandi.
 
-LocalStorage: Har safar film qo'shilganda yoki o'chirilganda localStorage.setItem() ishlaydi. Sahifa yangilansa ham ma'lumotlar o'chib ketmaydi.
+Overlay ochilishi: Har bir rasm bosilganda lightbox elementiga .active klassi qo'shiladi va katta rasm yuklanadi.
 
-Real vaqtda qidiruv: Qidiruv maydoniga yozishingiz bilan input hodisasi (event) ishga tushadi va har bir harfda ro'yxatni saralab boradi.
+Oldinga/orqaga navigatsiya: &#10094; va &#10095; belgilari yordamida tugmalar yaratildi va cheksiz aylanish tsikli (% operatori orqali) o'rnatildi.
 
-Filtrlash: Janrni o'zgartirganingizda qidiruv matni bilan birgalikda ishlaydigan mukammal kombinatsiyalangan filtr yaratilgan.
+Yopilish: X tugmasi, Escape tugmasi yoki rasmning tashqarisidagi qora maydon bosilganda overlay yopiladi.
+
+CSS Animatsiya: .overlay klassida transition: opacity 0.4s ease orqali silliq paydo bo'lish (fade-in) va yo'qolish (fade-out) ta'minlandi.
+
+Keyboard Navigatsiya: JS'dagi keydown hodisasi orqali ArrowRight (o'ngga), ArrowLeft (chapga) va
