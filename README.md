@@ -1,362 +1,311 @@
 # js-loyihalar-2
+Mana, siz aytgan barcha funksiyalarga ega (film qo'shish, o'chirish, localStorage bilan ishlash, real vaqtda qidirish va janr bo'yicha filtrlash) to'liq HTML, CSS va JavaScript kodi.
 
-HTML, CSS va JavaScript kodi
+Barcha kodlarni bitta faylga (masalan, index.html deb nomlab) saqlab, brauzerda ochishingiz mumkin.
+
 HTML
 <!DOCTYPE html>
 <html lang="uz">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Moliya Tracker — Balans Nazorati</title>
+    <title>Kinolar Olami</title>
     <style>
         * {
+            box-sizing: border-box;
             margin: 0;
             padding: 0;
-            box-sizing: border-box;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
         body {
-            background-color: #f4f6f9;
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            background-color: #f4f7f6;
+            color: #333;
             padding: 20px;
         }
 
-        .tracker-container {
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #2c3e50;
+        }
+
+        /* Forma va boshqaruv bo'limi */
+        .controls-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        @media (max-width: 768px) {
+            .controls-section {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card-form, .filter-box {
             background: white;
-            padding: 30px;
-            border-radius: 16px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
-            width: 100%;
-            max-width: 500px;
-        }
-
-        h2, h3 {
-            color: #1e293b;
-            margin-bottom: 20px;
-            text-align: center;
-        }
-
-        /* Dashbord (Balans, Daromad, Xarajat paneli) */
-        .balance-section {
-            text-align: center;
-            margin-bottom: 25px;
-        }
-
-        .balance-title {
-            font-size: 0.9rem;
-            color: #64748b;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .balance-amount {
-            font-size: 2.2rem;
-            font-weight: 700;
-            color: #0f172a;
-            margin-top: 5px;
-        }
-
-        .stats-container {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 30px;
-        }
-
-        .stat-box {
-            flex: 1;
-            background: #f8fafc;
-            padding: 15px;
-            border-radius: 12px;
-            text-align: center;
-            border: 1px solid #e2e8f0;
-        }
-
-        .stat-box.income h4 { color: #10b981; }
-        .stat-box.expense h4 { color: #ef4444; }
-
-        .stat-amount {
-            font-size: 1.2rem;
-            font-weight: 600;
-            margin-top: 5px;
-            color: #334155;
-        }
-
-        /* Forma dizayni */
-        .form-group {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            margin-bottom: 30px;
-            background: #f8fafc;
             padding: 20px;
-            border-radius: 12px;
-            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
         }
 
         .form-group input, .form-group select {
-            padding: 12px;
-            border: 1px solid #cbd5e1;
-            border-radius: 8px;
-            font-size: 1rem;
-            outline: none;
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
         }
 
-        .form-group input:focus, .form-group select:focus {
-            border-color: #3b82f6;
-        }
-
-        .submit-btn {
-            padding: 12px;
-            background: #3b82f6;
+        button {
+            background-color: #2ecc71;
             color: white;
             border: none;
-            border-radius: 8px;
-            font-weight: 600;
-            font-size: 1rem;
+            padding: 12px 20px;
+            border-radius: 4px;
             cursor: pointer;
-            transition: background 0.2s;
+            font-size: 16px;
+            width: 100%;
+            font-weight: bold;
+            transition: background 0.3s;
         }
 
-        .submit-btn:hover {
-            background: #2563eb;
+        button:hover {
+            background-color: #27ae60;
         }
 
-        /* Tranzaksiyalar ro'yxati */
-        .history-list {
-            list-style: none;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            max-height: 250px;
-            overflow-y: auto;
-            padding-right: 5px;
+        /* Filmlar kartochkalari */
+        .movies-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
         }
 
-        .transaction-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px 16px;
+        .movie-card {
             background: white;
             border-radius: 8px;
-            border-left: 5px solid #cbd5e1;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
             position: relative;
-        }
-
-        /* Ranglar farqi */
-        .transaction-item.income-type {
-            border-left-color: #10b981;
-        }
-
-        .transaction-item.expense-type {
-            border-left-color: #ef4444;
-        }
-
-        .tx-details {
             display: flex;
             flex-direction: column;
+            justify-content: space-between;
+            border-top: 5px solid #3498db;
         }
 
-        .tx-text {
-            font-weight: 500;
-            color: #334155;
-        }
-
-        .tx-amount {
-            font-weight: 600;
-        }
-
-        .income-type .tx-amount { color: #10b981; }
-        .expense-type .tx-amount { color: #ef4444; }
-
-        .delete-tx-btn {
-            background: transparent;
-            border: none;
-            color: #94a3b8;
-            cursor: pointer;
-            font-size: 1.2rem;
+        .movie-title {
+            font-size: 18px;
             font-weight: bold;
-            padding: 4px 8px;
-            transition: color 0.2s;
+            margin-bottom: 10px;
+            color: #2c3e50;
         }
 
-        .delete-tx-btn:hover {
-            color: #ef4444;
+        .movie-info {
+            font-size: 14px;
+            color: #7f8c8d;
+            margin-bottom: 5px;
+        }
+
+        .movie-rating {
+            display: inline-block;
+            background: #f1c40f;
+            color: #fff;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 12px;
+            margin-top: 10px;
+            align-self: flex-start;
+        }
+
+        .delete-btn {
+            background-color: #e74c3c;
+            margin-top: 15px;
+            padding: 8px;
+            font-size: 14px;
+        }
+
+        .delete-btn:hover {
+            background-color: #c0392b;
+        }
+
+        .no-movies {
+            grid-column: 1 / -1;
+            text-align: center;
+            color: #7f8c8d;
+            font-size: 18px;
+            padding: 40px;
         }
     </style>
 </head>
 <body>
 
-    <div class="tracker-container">
-        <h2>Moliya Tracker</h2>
+<div class="container">
+    <h1>🎬 Kinolar Katalogi</h1>
 
-        <div class="balance-section">
-            <div class="balance-title">Jami Balans</div>
-            <div class="balance-amount" id="totalBalance">0 SO'M</div>
+    <div class="controls-section">
+        <div class="card-form">
+            <h3>Yangi film qo'shish</h3>
+            <form id="movieForm" style="margin-top: 15px;">
+                <div class="form-group">
+                    <label>Film nomi</label>
+                    <input type="text" id="title" required placeholder="Masalan: Interstellar">
+                </div>
+                <div class="form-group">
+                    <label>Janri</label>
+                    <select id="genre" required>
+                        <option value="">Janrni tanlang</option>
+                        <option value="Fantastika">Fantastika</option>
+                        <option value="Boeyevik">Boeyevik</option>
+                        <option value="Drama">Drama</option>
+                        <option value="Komediya">Komediya</option>
+                        <option value="Daxshat">Daxshat</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Yili</label>
+                    <input type="number" id="year" min="1800" max="2026" required placeholder="Masalan: 2014">
+                </div>
+                <div class="form-group">
+                    <label>Reyting (IMDb)</label>
+                    <input type="number" id="rating" min="0" max="10" step="0.1" required placeholder="Masalan: 8.6">
+                </div>
+                <button type="submit">Qo'shish</button>
+            </form>
         </div>
 
-        <div class="stats-container">
-            <div class="stat-box income">
-                <h4>Daromad</h4>
-                <div class="stat-amount" id="totalIncome">0 SO'M</div>
+        <div class="filter-box">
+            <h3>Qidiruv va Filtrlash</h3>
+            <div class="form-group" style="margin-top: 15px;">
+                <label>Nomi bo'yicha qidirish (Real vaqtda)</label>
+                <input type="text" id="searchInp" placeholder="Film nomini yozing...">
             </div>
-            <div class="stat-box expense">
-                <h4>Xarajat</h4>
-                <div class="stat-amount" id="totalExpense">0 SO'M</div>
+            <div class="form-group">
+                <label>Janr bo'yicha saralash</label>
+                <select id="filterGenre">
+                    <option value="all">Barcha janrlar</option>
+                    <option value="Fantastika">Fantastika</option>
+                    <option value="Boeyevik">Boeyevik</option>
+                    <option value="Drama">Drama</option>
+                    <option value="Komediya">Komediya</option>
+                    <option value="Daxshat">Daxshat</option>
+                </select>
             </div>
         </div>
-
-        <h3>Yangi Tranzaksiya</h3>
-        <form id="txForm" class="form-group">
-            <input type="text" id="txText" placeholder="Tranzaksiya nomi (Masalan: Oylik, Supermarket...)" required>
-            <input type="number" id="txAmount" placeholder="Summa (SO'M)" min="1" required>
-            <select id="txType">
-                <option value="income">Daromad (+)</option>
-                <option value="expense">Xarajat (-)</option>
-            </select>
-            <button type="submit" class="submit-btn">Qo'shish</button>
-        </form>
-
-        <h3>Tranzaksiyalar Ro'yxati</h3>
-        <ul class="history-list" id="historyList"></ul>
     </div>
 
-    <script>
-        // DOM Elementlari
-        const txForm = document.getElementById('txForm');
-        const txText = document.getElementById('txText');
-        const txAmount = document.getElementById('txAmount');
-        const txType = document.getElementById('txType');
-        const historyList = document.getElementById('historyList');
+    <div class="movies-grid" id="moviesGrid"></div>
+</div>
 
-        const totalBalance = document.getElementById('totalBalance');
-        const totalIncome = document.getElementById('totalIncome');
-        const totalExpense = document.getElementById('totalExpense');
+<script>
+    // LocalStorage'dan ma'lumotlarni olish yoki bo'sh massiv yaratish
+    let movies = JSON.parse(localStorage.getItem('movies')) || [];
 
-        // LocalStorage'dan ma'lumotlarni yuklash
-        let transactions = JSON.parse(localStorage.getItem('transactions')) || [];
+    const movieForm = document.getElementById('movieForm');
+    const moviesGrid = document.getElementById('moviesGrid');
+    const searchInp = document.getElementById('searchInp');
+    const filterGenre = document.getElementById('filterGenre');
 
-        // ==========================================
-        //  HISOBLASH LOGIKASI (Alohida funksiyalar)
-        // ==========================================
-        
-        // 1. Umumiy daromadni hisoblash
-        function calculateIncome() {
-            return transactions
-                .filter(tx => tx.type === 'income')
-                .reduce((sum, tx) => sum + tx.amount, 0);
+    // Filmlarni ekranga chiqarish funksiyasi
+    function displayMovies(moviesToRender) {
+        moviesGrid.innerHTML = '';
+
+        if (moviesToRender.length === 0) {
+            moviesGrid.innerHTML = '<div class="no-movies">Filmlar topilmadi yoki hali qo\'shilmagan.</div>';
+            return;
         }
 
-        // 2. Umumiy xarajatni hisoblash
-        function calculateExpense() {
-            return transactions
-                .filter(tx => tx.type === 'expense')
-                .reduce((sum, tx) => sum + tx.amount, 0);
-        }
-
-        // 3. Jami balansni hisoblash
-        function calculateBalance(income, expense) {
-            return income - expense;
-        }
-
-        // Dashbord UI (ekran) qismini yangilash
-        function updateDashboardUI() {
-            const income = calculateIncome();
-            const expense = calculateExpense();
-            const balance = calculateBalance(income, expense);
-
-            totalIncome.textContent = `${income.toLocaleString()} SO'M`;
-            totalExpense.textContent = `${expense.toLocaleString()} SO'M`;
-            totalBalance.textContent = `${balance.toLocaleString()} SO'M`;
-            
-            // Balans minusga kirib ketsa qizil rangda ko'rsatish
-            totalBalance.style.color = balance >= 0 ? '#0f172a' : '#ef4444';
-        }
-
-        // ==========================================
-        //  RENDER VA ASOSIY AMALLAR LOGIKASI
-        // ==========================================
-
-        // Tranzaksiyalar ro'yxatini render qilish
-        function renderTransactions() {
-            historyList.innerHTML = '';
-
-            transactions.forEach(tx => {
-                const li = document.createElement('li');
-                const sign = tx.type === 'income' ? '+' : '-';
-                
-                // Ranglar farqi uchun klass qo'shish
-                li.className = `transaction-item ${tx.type}-type`;
-
-                li.innerHTML = `
-                    <div class="tx-details">
-                        <span class="tx-text">${tx.text}</span>
-                    </div>
-                    <div>
-                        <span class="tx-amount">${sign}${tx.amount.toLocaleString()} SO'M</span>
-                        <button class="delete-tx-btn" onclick="deleteTransaction(${tx.id})">×</button>
-                    </div>
-                `;
-
-                historyList.appendChild(li);
-            });
-        }
-
-        // Yangi tranzaksiya qo'shish
-        txForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-
-            const newTransaction = {
-                id: Date.now(),
-                text: txText.value.trim(),
-                amount: parseFloat(txAmount.value),
-                type: txType.value
-            };
-
-            transactions.push(newTransaction);
-            saveToStorage();
-            init();
-
-            // Formani tozalash
-            txText.value = '';
-            txAmount.value = '';
+        moviesToRender.forEach(movie => {
+            const card = document.createElement('div');
+            card.className = 'movie-card';
+            card.innerHTML = `
+                <div>
+                    <div class="movie-title">${movie.title}</div>
+                    <div class="movie-info"><strong>Janr:</strong> ${movie.genre}</div>
+                    <div class="movie-info"><strong>Yil:</strong> ${movie.year}</div>
+                    <div class="movie-rating">★ ${movie.rating}</div>
+                </div>
+                <button class="delete-btn" onclick="deleteMovie(${movie.id})">O'chirish</button>
+            `;
+            moviesGrid.appendChild(card);
         });
+    }
 
-        // Tranzaksiyani o'chirish
-        window.deleteTransaction = function(id) {
-            transactions = transactions.filter(tx => tx.id !== id);
-            saveToStorage();
-            init();
+    // Yangi film qo'shish
+    movieForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+
+        const newMovie = {
+            id: Date.now(), // Noyob ID yaratish uchun vaqtdan foydalanamiz
+            title: document.getElementById('title').value,
+            genre: document.getElementById('genre').value,
+            year: document.getElementById('year').value,
+            rating: document.getElementById('rating').value
         };
 
-        // Ma'lumotlarni localStorage'da saqlash
-        function saveToStorage() {
-            localStorage.setItem('transactions', JSON.stringify(transactions));
-        }
+        movies.push(newMovie);
+        saveAndRender();
+        movieForm.reset(); // Formani tozalash
+    });
 
-        // Ilovani qayta yuklash / ishga tushirish funksiyasi
-        function init() {
-            renderTransactions();
-            updateDashboardUI();
-        }
+    // Filmni o'chirish
+    function deleteMovie(id) {
+        movies = movies.filter(movie => movie.id !== id);
+        saveAndRender();
+    }
 
-        // Dasturni ilk bor ishga tushirish
-        init();
-    </script>
+    // Ma'lumotni saqlash va yangilash
+    function saveAndRender() {
+        localStorage.setItem('movies', JSON.stringify(movies));
+        filterAndSearchMovies();
+    }
+
+    // Real vaqtda Qidiruv va Filtrlash funksiyasi
+    function filterAndSearchMovies() {
+        const searchText = searchInp.value.toLowerCase();
+        const selectedGenre = filterGenre.value;
+
+        const filtered = movies.filter(movie => {
+            const matchesSearch = movie.title.toLowerCase().includes(searchText);
+            const matchesGenre = selectedGenre === 'all' || movie.genre === selectedGenre;
+            return matchesSearch && matchesGenre;
+        });
+
+        displayMovies(filtered);
+    }
+
+    // Hodisalarni tinglash (Qidiruv va Filtr uchun)
+    searchInp.addEventListener('input', filterAndSearchMovies);
+    filterGenre.addEventListener('change', filterAndSearchMovies);
+
+    // Dastur ilk bor yuklanganda filmlarni ko'rsatish
+    displayMovies(movies);
+</script>
+
 </body>
 </html>
-Talablar qanday bajarildi?
-Daromad va xarajat shakli: HTML ichida matnli input, raqamli summa kiritish inputi va turini tanlash (Daromad/Xarajat) uchun select elementi shakllantirildi.
+Kod qanday ishlaydi?
+Kartochka ko'rinishi: CSS Grid yordamida filmlar chiroyli va moslashuvchan (responsive) kartochka shaklida chiqadi.
 
-Jami balans, daromad va xarajatlarni hisoblash: calculateIncome, calculateExpense va calculateBalance funksiyalari orqali xavfsiz hisob-kitob qilinadi hamda jami summa .toLocaleString() metodi yordamida chiroyli formatda (Masalan: 1,250,000 SO'M) ekranga chiqariladi.
+LocalStorage: Har safar film qo'shilganda yoki o'chirilganda localStorage.setItem() ishlaydi. Sahifa yangilansa ham ma'lumotlar o'chib ketmaydi.
 
-Rang bilan ajratilgan ro'yxat: CSS yordamida tranzaksiya turi tekshirilib, agar u income bo'lsa yashil (#10b981), expense bo'lsa qizil (#ef4444) rangli hoshiyalar (border-left) va matn ranglari berildi.
+Real vaqtda qidiruv: Qidiruv maydoniga yozishingiz bilan input hodisasi (event) ishga tushadi va har bir harfda ro'yxatni saralab boradi.
 
-Tranzaksiyani o'chirish: Har bir element yonidagi × tugmasi deleteTransaction(id) funksiyasini chaqiradi va massivdan tegishli elementni o'chirib, hisob-kitobni qayta yangilaydi.
-
-localStorage: Har safar yangi tranzaksiya kiritilganda yoki o'chirilganda o'zgarishlar localStorage.setItem
+Filtrlash: Janrni o'zgartirganingizda qidiruv matni bilan birgalikda ishlaydigan mukammal kombinatsiyalangan filtr yaratilgan.
