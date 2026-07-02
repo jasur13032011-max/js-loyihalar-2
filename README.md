@@ -1,7 +1,7 @@
 # js-loyihalar-2
-Mana, siz aytgan barcha shartlarga javob beradigan — 5 ta slayd, navigatsiya tugmalari, pastki nuqtalar (dots), 3 soniyalik avtomatik o'tish (va foydalanuvchi aralashganda to'xtash) funksiyasiga ega, silliq CSS animatsiyali Karusel (Slider) kodi.
+Mana, siz aytgan barcha shartlarga javob beradigan — chiroyli dizayn, silliq ishlash xususiyati, progress bar, ovoz boshqaruvi hamda Shuffle (tasodifiy) va Repeat (takrorlash) rejimlari mavjud to'liq Musiqa Pleyeri kodi.
 
-Buni bitta faylga (masalan, slider.html) saqlab, brauzerda ishlatishingiz mumkin:
+Rasmlar va audio fayllar xizmat ko'rsatuvchi ochiq internet manbalaridan (bepul musiqalar) olindi, shuning uchun kodni saqlab brauzerda ochishingiz bilan pleyer to'liq ishlaydi. Kodni bitta faylga (masalan, player.html deb) saqlang:
 
 HTML
 <!DOCTYPE html>
@@ -9,7 +9,7 @@ HTML
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Silliq Karusel Slider</title>
+    <title>Interaktiv Musiqa Pleyeri</title>
     <style>
         * {
             box-sizing: border-box;
@@ -19,267 +19,384 @@ HTML
         }
 
         body {
-            background-color: #f0f2f5;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            height: 100vh;
             display: flex;
-            flex-direction: column;
             justify-content: center;
             align-items: center;
-            min-height: 100vh;
+            color: #fff;
         }
 
-        h1 {
-            margin-bottom: 20px;
-            color: #333;
+        .player-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(15px);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.3);
+            width: 380px;
+            text-align: center;
+            border: 1px solid rgba(255,255,255,0.1);
         }
 
-        /* Slider asosiy konteyneri */
-        .slider-container {
-            position: relative;
-            width: 800px;
-            max-width: 95%;
-            height: 450px;
+        /* Qo'shiq rasmi */
+        .img-area {
+            width: 200px;
+            height: 200px;
+            margin: 0 auto 25px auto;
+            border-radius: 50%;
             overflow: hidden;
-            border-radius: 12px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+            border: 4px solid rgba(255,255,255,0.2);
+            transition: transform 0.5s ease;
         }
 
-        /* Slaydlar liniyasi */
-        .slider-wrapper {
-            display: flex;
-            width: 100%;
-            height: 100%;
-            /* Silliq o'tish effekti */
-            transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1);
-        }
-
-        /* Har bir slayd */
-        .slide {
-            min-width: 100%;
-            height: 100%;
-            position: relative;
-        }
-
-        .slide img {
+        .img-area img {
             width: 100%;
             height: 100%;
             object-fit: cover;
         }
 
-        /* Slayd ustidagi matn */
-        .slide-caption {
-            position: absolute;
-            bottom: 40px;
-            left: 40px;
-            color: white;
-            background: rgba(0, 0, 0, 0.6);
-            padding: 15px 25px;
-            border-radius: 8px;
-            backdrop-filter: blur(5px);
+        /* Qo'shiq aylanayotganda animatsiya */
+        .playing .img-area {
+            animation: rotateAlbum 12s linear infinite;
         }
 
-        .slide-caption h3 {
-            font-size: 24px;
+        @keyframes rotateAlbum {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Qo'shiq ma'lumotlari */
+        .song-details {
+            margin-bottom: 25px;
+        }
+
+        .song-details .name {
+            font-size: 20px;
+            font-weight: bold;
             margin-bottom: 5px;
         }
 
-        /* Oldinga/orqaga tugmalari */
-        .nav-btn {
-            position: absolute;
-            top: 50%;
-            transform: translateY(-50%);
-            background: rgba(255, 255, 255, 0.3);
-            color: white;
-            border: none;
-            font-size: 24px;
-            padding: 15px 20px;
+        .song-details .artist {
+            font-size: 14px;
+            color: #ccc;
+        }
+
+        /* Progress Bar */
+        .progress-area {
+            height: 6px;
+            width: 100%;
+            background: rgba(255,255,255,0.2);
+            border-radius: 5px;
             cursor: pointer;
-            border-radius: 50%;
-            transition: background 0.3s, transform 0.2s;
-            backdrop-filter: blur(2px);
-            user-select: none;
-            z-index: 10;
+            margin-bottom: 8px;
+            position: relative;
         }
 
-        .nav-btn:hover {
-            background: rgba(255, 255, 255, 0.8);
-            color: #333;
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background: #1db954; /* Spotify yashil rangi */
+            border-radius: 5px;
+            position: relative;
+            transition: width 0.1s linear;
         }
 
-        .nav-btn:active {
-            transform: translateY(-50%) scale(0.95);
-        }
-
-        .prev-btn { left: 20px; }
-        .next-btn { right: 20px; }
-
-        /* Pastki nuqtalar (Dots) */
-        .dots-container {
+        .timer {
             display: flex;
-            gap: 10px;
-            position: absolute;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 10;
+            justify-content: space-between;
+            font-size: 12px;
+            color: #ddd;
+            margin-bottom: 25px;
         }
 
-        .dot {
-            width: 12px;
-            height: 12px;
-            background: rgba(255, 255, 255, 0.5);
-            border-radius: 50%;
+        /* Boshqaruv tugmalari */
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .controls button {
+            background: none;
+            border: none;
+            color: #fff;
             cursor: pointer;
-            transition: background 0.3s, transform 0.3s, border-radius 0.3s;
+            font-size: 20px;
+            transition: color 0.2s, transform 0.1s;
         }
 
-        .dot.active {
+        .controls button:hover { color: #1db954; }
+        .controls button:active { transform: scale(0.95); }
+
+        .controls .play-pause {
             background: #fff;
-            transform: scale(1.2);
-            width: 30px; /* Aktiv nuqtani cho'zish effekti */
-            border-radius: 6px;
+            color: #333;
+            width: 55px;
+            height: 55px;
+            border-radius: 50%;
+            font-size: 22px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+        .controls .play-pause:hover { background: #1db954; color: #fff; }
+
+        /* Aktiv rejimlar rangi */
+        .controls button.active-mode {
+            color: #1db954;
+            text-shadow: 0 0 8px rgba(29, 185, 84, 0.6);
+        }
+
+        /* Ovoz boshqaruvi (Volume) */
+        .volume-area {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            font-size: 14px;
+        }
+
+        .volume-area input {
+            cursor: pointer;
+            accent-color: #1db954;
+            width: 100px;
         }
     </style>
 </head>
 <body>
 
-    <h1>Interaktiv Foto Slider</h1>
-
-    <div class="slider-container">
-        <div class="slider-wrapper" id="sliderWrapper">
-            <div class="slide">
-                <img src="https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=1000" alt="Slayd 1">
-                <div class="slide-caption">
-                    <h3>Yosemite vodiysi</h3>
-                    <p>Tabiatning eng go'zal mo'jizalaridan biri.</p>
-                </div>
-            </div>
-            <div class="slide">
-                <img src="https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=1000" alt="Slayd 2">
-                <div class="slide-caption">
-                    <h3>Yashil tepaliklar</h3>
-                    <p>Ertalabki tuman va toza havo.</p>
-                </div>
-            </div>
-            <div class="slide">
-                <img src="https://images.unsplash.com/photo-1447752875215-b2761acb3c5d?w=1000" alt="Slayd 3">
-                <div class="slide-caption">
-                    <h3>Sirlardan to'la o'rmon</h3>
-                    <p>Asriy daraxtlar orasidagi silliq yo'lak.</p>
-                </div>
-            </div>
-            <div class="slide">
-                <img src="https://images.unsplash.com/photo-1472214222541-d510753a8707?w=1000" alt="Slayd 4">
-                <div class="slide-caption">
-                    <h3>Tinch vodiy</h3>
-                    <p>Quyosh botayotgan paytdagi go'zallik.</p>
-                </div>
-            </div>
-            <div class="slide">
-                <img src="https://images.unsplash.com/photo-1513836279014-a89f7a76ae86?w=1000" alt="Slayd 5">
-                <div class="slide-caption">
-                    <h3>Katta o'rmonlar</h3>
-                    <p>Tabiat bilan uyg'unlik hissi.</p>
-                </div>
-            </div>
-        </div>
-
-        <button class="nav-btn prev-btn" id="prevBtn">&#10094;</button>
-        <button class="nav-btn next-btn" id="nextBtn">&#10095;</button>
-
-        <div class="dots-container" id="dotsContainer"></div>
+<div class="player-container" id="playerContainer">
+    <div class="img-area">
+        <img id="trackImage" src="" alt="Albom rasmi">
     </div>
 
+    <div class="song-details">
+        <p class="name" id="trackName">Yuklanmoqda...</p>
+        <p class="artist" id="trackArtist">...</p>
+    </div>
+
+    <div class="progress-area" id="progressArea">
+        <div class="progress-bar" id="progressBar"></div>
+    </div>
+    <div class="timer">
+        <span id="currentTime">0:00</span>
+        <span id="duration">0:00</span>
+    </div>
+
+    <div class="controls">
+        <button id="repeatBtn" title="Takrorlash">🔁</button>
+        <button id="prevBtn" style="font-size: 26px;">⏮</button>
+        <button id="playPauseBtn" class="play-pause">▶</button>
+        <button id="nextBtn" style="font-size: 26px;">⏭</button>
+        <button id="shuffleBtn" title="Tasodifiy tartib">🔀</button>
+    </div>
+
+    <div class="volume-area">
+        <span>🔈</span>
+        <input type="range" id="volumeSlider" min="0" max="1" step="0.05" value="0.7">
+        <span>🔊</span>
+    </div>
+</div>
+
+<audio id="mainAudio" src=""></audio>
+
 <script>
-    const wrapper = document.getElementById('sliderWrapper');
-    const slides = document.querySelectorAll('.slide');
+    // Qo'shiqlar bazasi
+    const playlist = [
+        {
+            name: "Lost in the City Lights",
+            artist: "Cosmo Sheldrake",
+            img: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=400",
+            src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
+        },
+        {
+            name: "Forest Echoes",
+            artist: "Nature Ambient",
+            img: "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=400",
+            src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3"
+        },
+        {
+            name: "Midnight Drive",
+            artist: "Lofi Beats",
+            img: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=400",
+            src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3"
+        },
+        {
+            name: "Summer Chill",
+            artist: "Tropical Vibe",
+            img: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400",
+            src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3"
+        }
+    ];
+
+    let trackIndex = 0;
+    let isPlaying = false;
+    let isRepeat = false;
+    let isShuffle = false;
+
+    const playerContainer = document.getElementById('playerContainer');
+    const mainAudio = document.getElementById('mainAudio');
+    const trackImage = document.getElementById('trackImage');
+    const trackName = document.getElementById('trackName');
+    const trackArtist = document.getElementById('trackArtist');
+    
+    const playPauseBtn = document.getElementById('playPauseBtn');
     const prevBtn = document.getElementById('prevBtn');
     const nextBtn = document.getElementById('nextBtn');
-    const dotsContainer = document.getElementById('dotsContainer');
+    const repeatBtn = document.getElementById('repeatBtn');
+    const shuffleBtn = document.getElementById('shuffleBtn');
+    
+    const progressArea = document.getElementById('progressArea');
+    const progressBar = document.getElementById('progressBar');
+    const currentTimeText = document.getElementById('currentTime');
+    const durationText = document.getElementById('duration');
+    const volumeSlider = document.getElementById('volumeSlider');
 
-    let currentIndex = 0;
-    const totalSlides = slides.length;
-    let autoPlayInterval;
+    // Dastlabki yuklash
+    window.addEventListener('DOMContentLoaded', () => {
+        loadTrack(trackIndex);
+    });
 
-    // 1. Dinamik ravishda nuqtalarni (dots) yaratish
-    function createDots() {
-        for (let i = 0; i < totalSlides; i++) {
-            const dot = document.createElement('div');
-            dot.classList.add('dot');
-            if (i === 0) dot.classList.add('active');
-            dot.addEventListener('click', () => {
-                stopAutoPlay(); // Foydalanuvchi bosganda avtomatik o'tish to'xtaydi
-                goToSlide(i);
-            });
-            dotsContainer.appendChild(dot);
+    // Qo'shiqni yuklash funksiyasi
+    function loadTrack(index) {
+        const track = playlist[index];
+        trackName.innerText = track.name;
+        trackArtist.innerText = track.artist;
+        trackImage.src = track.img;
+        mainAudio.src = track.src;
+    }
+
+    // Play / Pause boshqaruvi
+    function togglePlay() {
+        if (isPlaying) {
+            pauseTrack();
+        } else {
+            playTrack();
         }
     }
 
-    // 2. Slayderni kerakli indeksga surish funksiyasi
-    function goToSlide(index) {
-        currentIndex = index;
+    function playTrack() {
+        isPlaying = true;
+        playPauseBtn.innerText = "⏸";
+        playerContainer.classList.add('playing');
+        mainAudio.play();
+    }
+
+    function pauseTrack() {
+        isPlaying = false;
+        playPauseBtn.innerText = "▶";
+        playerContainer.classList.remove('playing');
+        mainAudio.pause();
+    }
+
+    // Keyingi va oldingi qo'shiqqa o'tish
+    function nextTrack() {
+        if (isShuffle) {
+            // Tasodifiy rejim yoqilgan bo'lsa
+            let randomIndex;
+            do {
+                randomIndex = Math.floor(Math.random() * playlist.length);
+            } while (randomIndex === trackIndex);
+            trackIndex = randomIndex;
+        } else {
+            // Oddiy tartibda o'tish
+            trackIndex = (trackIndex + 1) % playlist.length;
+        }
+        loadTrack(trackIndex);
+        playTrack();
+    }
+
+    function prevTrack() {
+        trackIndex = (trackIndex - 1 + playlist.length) % playlist.length;
+        loadTrack(trackIndex);
+        playTrack();
+    }
+
+    // Progress bar va vaqtni yangilash
+    mainAudio.addEventListener('timeupdate', (e) => {
+        const currentTime = e.target.currentTime;
+        const duration = e.target.duration;
         
-        // Agar oxiridan o'tib ketsa boshiga qaytaradi
-        if (currentIndex >= totalSlides) currentIndex = 0;
-        // Agar birinchisidan orqaga o'tsa oxiriga qaytaradi
-        if (currentIndex < 0) currentIndex = totalSlides - 1;
+        if (duration) {
+            // Progress barni surish
+            const progressWidth = (currentTime / duration) * 100;
+            progressBar.style.width = `${progressWidth}%`;
 
-        // CSS transform orqali surish
-        wrapper.style.transform = `translateX(-${currentIndex * 100}%)`;
-        
-        updateDots();
-    }
+            // Vaqtni hisoblash (Joriy vaqt)
+            let currentMin = Math.floor(currentTime / 60);
+            let currentSec = Math.floor(currentTime % 60);
+            if (currentSec < 10) currentSec = `0${currentSec}`;
+            currentTimeText.innerText = `${currentMin}:${currentSec}`;
 
-    // 3. Aktiv nuqtani yangilash
-    function updateDots() {
-        const dots = document.querySelectorAll('.dot');
-        dots.forEach((dot, index) => {
-            if (index === currentIndex) {
-                dot.classList.add('active');
-            } else {
-                dot.classList.remove('active');
-            }
-        });
-    }
-
-    // 4. Avtomatik o'tishni boshlash (Har 3 soniyada)
-    function startAutoPlay() {
-        autoPlayInterval = setInterval(() => {
-            goToSlide(currentIndex + 1);
-        }, 3000);
-    }
-
-    // 5. Avtomatik o'tishni to'xtatish (Foydalanuvchi aralashganda)
-    function stopAutoPlay() {
-        clearInterval(autoPlayInterval);
-    }
-
-    // Tugmalar hodisalari
-    nextBtn.addEventListener('click', () => {
-        stopAutoPlay(); // Foydalanuvchi bosganda to'xtatadi
-        goToSlide(currentIndex + 1);
+            // Umumiy vaqt (Duration)
+            let totalMin = Math.floor(duration / 60);
+            let totalSec = Math.floor(duration % 60);
+            if (totalSec < 10) totalSec = `0${totalSec}`;
+            durationText.innerText = `${totalMin}:${totalSec}`;
+        }
     });
 
-    prevBtn.addEventListener('click', () => {
-        stopAutoPlay(); // Foydalanuvchi bosganda to'xtatadi
-        goToSlide(currentIndex - 1);
+    // Progress barni bosib o'tkazish (Click orqali)
+    progressArea.addEventListener('click', (e) => {
+        const progressWidthval = progressArea.clientWidth; 
+        const clickedOffsetX = e.offsetX; 
+        const songDuration = mainAudio.duration; 
+
+        if (songDuration) {
+            mainAudio.currentTime = (clickedOffsetX / progressWidthval) * songDuration;
+            if (!isPlaying) playTrack();
+        }
     });
 
-    // Ishga tushirish
-    createDots();
-    startAutoPlay();
+    // Ovoz balandligini boshqarish
+    volumeSlider.addEventListener('input', (e) => {
+        mainAudio.volume = e.target.value;
+    });
+
+    // Repeat rejimini yoqish/o'chirish
+    repeatBtn.addEventListener('click', () => {
+        isRepeat = !isRepeat;
+        if (isRepeat) {
+            isShuffle = false;
+            shuffleBtn.classList.remove('active-mode');
+            repeatBtn.classList.add('active-mode');
+        } else {
+            repeatBtn.classList.remove('active-mode');
+        }
+    });
+
+    // Shuffle rejimini yoqish/o'chirish
+    shuffleBtn.addEventListener('click', () => {
+        isShuffle = !isShuffle;
+        if (isShuffle) {
+            isRepeat = false;
+            repeatBtn.classList.remove('active-mode');
+            shuffleBtn.classList.add('active-mode');
+        } else {
+            shuffleBtn.classList.remove('active-mode');
+        }
+    });
+
+    // Qo'shiq tugaganda nima bo'lishi
+    mainAudio.addEventListener('ended', () => {
+        if (isRepeat) {
+            mainAudio.currentTime = 0;
+            playTrack();
+        } else {
+            nextTrack();
+        }
+    });
+
+    // Tugma hodisalari
+    playPauseBtn.addEventListener('click', togglePlay);
+    nextBtn.addEventListener('click', nextTrack);
+    prevBtn.addEventListener('click', prevTrack);
 </script>
 
 </body>
 </html>
 Kod qanday shartlarni bajardi?
-5 ta slayd: Unsplash platformasidan olingan 5 ta yuqori sifatli rasm va ularning har biriga mos sarlavhalar (slide-caption) joylashtirildi.
-
-Navigatsiya tugmalari: Chap va o'ng tomonda joylashgan orqaga (&#10094;) va oldinga (&#10095;) tugmalari slaydlarni ketma-ket almashtiradi.
-
-Pastki nuqtalar (Dots): Slaydlar soniga qarab JS orqali dinamik nuqtalar yaratiladi. Har bir nuqta bosilganda mos slaydga to'g'ridan-to'g'ri o'tiladi.
-
-Har 3 soniyada avtomatik o'tish: setInterval yordamida dastur yoqilishi bilan har 3000 millisekundda keyingi slaydga o'tish mexanizmi ishlaydi.
-
-Foydalanuvchi bosganda avtomatik to'xtash: Agar foydalanuvchi oldinga/orqaga tugmalarini yoki pastki nuqtalardan birini bossa, stopAutoPlay() funksiyasi ishga tushadi va clearInterval yordamida avtomatik o'tish butunlay to'xtatiladi.
-
-Silliq CSS transition: .slider-wrapper klassidagi transition: transform 0.6s cubic-bezier(...)
+Play / Pause: Markazdagi doira shaklidagi tugma qo'shiqni qo'yadi (mainAudio.play()) va to'xtatadi.
