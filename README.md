@@ -1,7 +1,5 @@
 # js-loyihalar-2
-Mana, siz aytgan barcha shartlarga javob beradigan — chiroyli dizayn, silliq ishlash xususiyati, progress bar, ovoz boshqaruvi hamda Shuffle (tasodifiy) va Repeat (takrorlash) rejimlari mavjud to'liq Musiqa Pleyeri kodi.
-
-Rasmlar va audio fayllar xizmat ko'rsatuvchi ochiq internet manbalaridan (bepul musiqalar) olindi, shuning uchun kodni saqlab brauzerda ochishingiz bilan pleyer to'liq ishlaydi. Kodni bitta faylga (masalan, player.html deb) saqlang:
+Barcha kodlar bitta admin.html fayliga joylashtirilgan. Shunchaki faylni saqlang va brauzerda oching.
 
 HTML
 <!DOCTYPE html>
@@ -9,394 +7,519 @@ HTML
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Interaktiv Musiqa Pleyeri</title>
+    <title>Responsive Admin Panel</title>
     <style>
+        /* --- CSS O'ZGARUVCHILARI (Light/Dark Mode uchun) --- */
+        :root {
+            --bg-color: #f4f6f9;
+            --panel-bg: #ffffff;
+            --text-color: #333333;
+            --text-muted: #7f8c8d;
+            --sidebar-bg: #2c3e50;
+            --sidebar-text: #ffffff;
+            --primary: #3498db;
+            --success: #2ecc71;
+            --danger: #e74c3c;
+            --border-color: #e0e0e0;
+        }
+
+        [data-theme="dark"] {
+            --bg-color: #121212;
+            --panel-bg: #1e1e1e;
+            --text-color: #e0e0e0;
+            --text-muted: #a0a0a0;
+            --sidebar-bg: #0d1b2a;
+            --sidebar-text: #e0e0e0;
+            --border-color: #333333;
+        }
+
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            transition: background 0.3s ease, color 0.3s ease;
         }
 
         body {
-            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* --- SIDEBAR NAVIGATSIYA --- */
+        .sidebar {
+            width: 260px;
+            background-color: var(--sidebar-bg);
+            color: var(--sidebar-text);
+            display: flex;
+            flex-direction: column;
+            padding: 20px 0;
+            position: fixed;
             height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            color: #fff;
+            z-index: 100;
+            transition: transform 0.3s ease;
         }
 
-        .player-container {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(15px);
-            padding: 30px;
-            border-radius: 20px;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.3);
-            width: 380px;
-            text-align: center;
-            border: 1px solid rgba(255,255,255,0.1);
-        }
-
-        /* Qo'shiq rasmi */
-        .img-area {
-            width: 200px;
-            height: 200px;
-            margin: 0 auto 25px auto;
-            border-radius: 50%;
-            overflow: hidden;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
-            border: 4px solid rgba(255,255,255,0.2);
-            transition: transform 0.5s ease;
-        }
-
-        .img-area img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        /* Qo'shiq aylanayotganda animatsiya */
-        .playing .img-area {
-            animation: rotateAlbum 12s linear infinite;
-        }
-
-        @keyframes rotateAlbum {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        /* Qo'shiq ma'lumotlari */
-        .song-details {
-            margin-bottom: 25px;
-        }
-
-        .song-details .name {
-            font-size: 20px;
+        .sidebar-brand {
+            font-size: 22px;
             font-weight: bold;
-            margin-bottom: 5px;
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 0 20px;
+            color: var(--primary);
         }
 
-        .song-details .artist {
-            font-size: 14px;
-            color: #ccc;
-        }
-
-        /* Progress Bar */
-        .progress-area {
-            height: 6px;
-            width: 100%;
-            background: rgba(255,255,255,0.2);
-            border-radius: 5px;
-            cursor: pointer;
-            margin-bottom: 8px;
-            position: relative;
-        }
-
-        .progress-bar {
-            height: 100%;
-            width: 0%;
-            background: #1db954; /* Spotify yashil rangi */
-            border-radius: 5px;
-            position: relative;
-            transition: width 0.1s linear;
-        }
-
-        .timer {
+        .sidebar-menu {
+            list-style: none;
             display: flex;
-            justify-content: space-between;
-            font-size: 12px;
-            color: #ddd;
-            margin-bottom: 25px;
+            flex-direction: column;
+            gap: 5px;
         }
 
-        /* Boshqaruv tugmalari */
-        .controls {
+        .sidebar-menu li {
+            padding: 15px 25px;
+            cursor: pointer;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .sidebar-menu li:hover, .sidebar-menu li.active {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-left: 4px solid var(--primary);
+        }
+
+        /* --- ASOSIY MAZMUN --- */
+        .main-content {
+            margin-left: 260px;
+            flex: 1;
+            padding: 30px;
+        }
+
+        /* Top Bar */
+        .topbar {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 25px;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
         }
 
-        .controls button {
+        .toggle-btn {
             background: none;
             border: none;
-            color: #fff;
+            font-size: 24px;
             cursor: pointer;
-            font-size: 20px;
-            transition: color 0.2s, transform 0.1s;
+            color: var(--text-color);
+            display: none;
         }
 
-        .controls button:hover { color: #1db954; }
-        .controls button:active { transform: scale(0.95); }
+        .theme-switch {
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            padding: 8px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            color: var(--text-color);
+            font-weight: bold;
+        }
 
-        .controls .play-pause {
-            background: #fff;
-            color: #333;
-            width: 55px;
-            height: 55px;
-            border-radius: 50%;
-            font-size: 22px;
+        /* Sahifalar boshqaruvi */
+        .page {
+            display: none;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        /* --- DASHBOARD SAHIFASI --- */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: var(--panel-bg);
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+            border: 1px solid var(--border-color);
+        }
+
+        .stat-card h3 {
+            font-size: 14px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            margin-bottom: 10px;
+        }
+
+        .stat-card .value {
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        /* --- JADVALLAR VA FORMALAR --- */
+        .panel {
+            background: var(--panel-bg);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+            border: 1px solid var(--border-color);
+            margin-bottom: 20px;
+        }
+
+        .form-inline {
             display: flex;
-            justify-content: center;
-            align-items: center;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-        }
-        .controls .play-pause:hover { background: #1db954; color: #fff; }
-
-        /* Aktiv rejimlar rangi */
-        .controls button.active-mode {
-            color: #1db954;
-            text-shadow: 0 0 8px rgba(29, 185, 84, 0.6);
-        }
-
-        /* Ovoz boshqaruvi (Volume) */
-        .volume-area {
-            display: flex;
-            align-items: center;
-            justify-content: center;
             gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        input, select {
+            padding: 10px 15px;
+            border: 1px solid var(--border-color);
+            background: var(--panel-bg);
+            color: var(--text-color);
+            border-radius: 5px;
+            font-size: 14px;
+            flex: 1;
+            min-width: 150px;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
             font-size: 14px;
         }
 
-        .volume-area input {
-            cursor: pointer;
-            accent-color: #1db954;
-            width: 100px;
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-success { background: var(--success); color: white; }
+        .btn-danger { background: var(--danger); color: white; }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        th { background: rgba(0,0,0,0.02); color: var(--text-muted); }
+
+        .actions-btn {
+            padding: 5px 10px;
+            font-size: 12px;
+            margin-right: 5px;
+        }
+
+        .empty-msg {
+            text-align: center;
+            color: var(--text-muted);
+            padding: 20px;
+            font-style: italic;
+        }
+
+        /* --- MOBIL RESPONSIVE --- */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            .sidebar.open {
+                transform: translateX(0);
+            }
+            .main-content {
+                margin-left: 0;
+                padding: 15px;
+            }
+            .toggle-btn {
+                display: block;
+            }
         }
     </style>
 </head>
 <body>
 
-<div class="player-container" id="playerContainer">
-    <div class="img-area">
-        <img id="trackImage" src="" alt="Albom rasmi">
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-brand">ADMIN PANEL</div>
+        <ul class="sidebar-menu">
+            <li class="active" onclick="switchPage('dashboard')">📊 Dashboard</li>
+            <li onclick="switchPage('users')">👥 Foydalanuvchilar</li>
+            <li onclick="switchPage('products')">📦 Mahsulotlar</li>
+        </ul>
     </div>
 
-    <div class="song-details">
-        <p class="name" id="trackName">Yuklanmoqda...</p>
-        <p class="artist" id="trackArtist">...</p>
-    </div>
+    <div class="main-content">
+        <div class="topbar">
+            <button class="toggle-btn" onclick="toggleSidebar()">☰</button>
+            <h2 id="pageTitle">Dashboard</h2>
+            <button class="theme-switch" onclick="toggleTheme()" id="themeBtn">🌙 Tun</button>
+        </div>
 
-    <div class="progress-area" id="progressArea">
-        <div class="progress-bar" id="progressBar"></div>
-    </div>
-    <div class="timer">
-        <span id="currentTime">0:00</span>
-        <span id="duration">0:00</span>
-    </div>
+        <div id="dashboardPage" class="page active">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h3>Jami Foydalanuvchilar</h3>
+                    <div class="value" id="dashUsersCount">0</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Jami Mahsulotlar</h3>
+                    <div class="value" id="dashProductsCount">0</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Ombordagi jami mahsulot soni</h3>
+                    <div class="value" id="dashTotalStock">0</div>
+                </div>
+            </div>
+        </div>
 
-    <div class="controls">
-        <button id="repeatBtn" title="Takrorlash">🔁</button>
-        <button id="prevBtn" style="font-size: 26px;">⏮</button>
-        <button id="playPauseBtn" class="play-pause">▶</button>
-        <button id="nextBtn" style="font-size: 26px;">⏭</button>
-        <button id="shuffleBtn" title="Tasodifiy tartib">🔀</button>
-    </div>
+        <div id="usersPage" class="page">
+            <div class="panel">
+                <h3 id="formTitle" style="margin-bottom: 15px;">Yangi foydalanuvchi qo'shish</h3>
+                <form id="userForm" class="form-inline">
+                    <input type="hidden" id="userId">
+                    <input type="text" id="userName" placeholder="Ism Familiya" required>
+                    <input type="email" id="userEmail" placeholder="Email manzil" required>
+                    <button type="submit" class="btn-primary" id="userSubmitBtn">Qo'shish</button>
+                    <button type="button" class="btn-danger" style="display:none;" id="cancelEditBtn" onclick="resetUserForm()">Bekor qilish</button>
+                </form>
+            </div>
+            <div class="panel" style="overflow-x: auto;">
+                <h3>Foydalanuvchilar ro'yxati</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Ism Familiya</th>
+                            <th>Email</th>
+                            <th>Amallar</th>
+                        </tr>
+                    </thead>
+                    <tbody id="usersTableBody"></tbody>
+                </table>
+                <div id="usersEmpty" class="empty-msg">Foydalanuvchilar mavjud emas.</div>
+            </div>
+        </div>
 
-    <div class="volume-area">
-        <span>🔈</span>
-        <input type="range" id="volumeSlider" min="0" max="1" step="0.05" value="0.7">
-        <span>🔊</span>
+        <div id="productsPage" class="page">
+            <div class="panel">
+                <h3>Qidiruv va Saralash</h3>
+                <div class="form-inline" style="margin-top: 15px;">
+                    <input type="text" id="prodSearch" placeholder="Mahsulot nomini yozing..." oninput="renderProducts()">
+                    <select id="prodFilter" onchange="renderProducts()">
+                        <option value="all">Barcha kategoriyalar</option>
+                        <option value="Elektronika">Elektronika</option>
+                        <option value="Kiyimlar">Kiyimlar</option>
+                        <option value="Kitoblar">Kitoblar</option>
+                    </select>
+                </div>
+            </div>
+            <div class="panel" style="overflow-x: auto;">
+                <h3>Mahsulotlar ombori</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Nomi</th>
+                            <th>Kategoriya</th>
+                            <th>Miqdori (Soni)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="productsTableBody"></tbody>
+                </table>
+                <div id="productsEmpty" class="empty-msg">Mahsulot topilmadi.</div>
+            </div>
+        </div>
     </div>
-</div>
-
-<audio id="mainAudio" src=""></audio>
 
 <script>
-    // Qo'shiqlar bazasi
-    const playlist = [
-        {
-            name: "Lost in the City Lights",
-            artist: "Cosmo Sheldrake",
-            img: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=400",
-            src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
-        },
-        {
-            name: "Forest Echoes",
-            artist: "Nature Ambient",
-            img: "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=400",
-            src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3"
-        },
-        {
-            name: "Midnight Drive",
-            artist: "Lofi Beats",
-            img: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=400",
-            src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3"
-        },
-        {
-            name: "Summer Chill",
-            artist: "Tropical Vibe",
-            img: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400",
-            src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3"
-        }
+    // --- BAZAVIY MA'LUMOTLAR (LocalStorage yoki Default) ---
+    let users = JSON.parse(localStorage.getItem('admin_users')) || [
+        { id: '1', userName: 'Anvar Aliyev', userEmail: 'anvar@gmail.com' },
+        { id: '2', userName: 'Dilnoza Karimova', userEmail: 'dilnoza@mail.ru' }
     ];
 
-    let trackIndex = 0;
-    let isPlaying = false;
-    let isRepeat = false;
-    let isShuffle = false;
+    let products = JSON.parse(localStorage.getItem('admin_products')) || [
+        { name: 'iPhone 15 Pro', category: 'Elektronika', stock: 12 },
+        { name: 'T-Shirt Sport', category: 'Kiyimlar', stock: 45 },
+        { name: 'JavaScript Qo\'llanma', category: 'Kitoblar', stock: 7 },
+        { name: 'MacBook Air M3', category: 'Elektronika', stock: 5 }
+    ];
 
-    const playerContainer = document.getElementById('playerContainer');
-    const mainAudio = document.getElementById('mainAudio');
-    const trackImage = document.getElementById('trackImage');
-    const trackName = document.getElementById('trackName');
-    const trackArtist = document.getElementById('trackArtist');
-    
-    const playPauseBtn = document.getElementById('playPauseBtn');
-    const prevBtn = document.getElementById('prevBtn');
-    const nextBtn = document.getElementById('nextBtn');
-    const repeatBtn = document.getElementById('repeatBtn');
-    const shuffleBtn = document.getElementById('shuffleBtn');
-    
-    const progressArea = document.getElementById('progressArea');
-    const progressBar = document.getElementById('progressBar');
-    const currentTimeText = document.getElementById('currentTime');
-    const durationText = document.getElementById('duration');
-    const volumeSlider = document.getElementById('volumeSlider');
+    let isEditing = false;
 
-    // Dastlabki yuklash
-    window.addEventListener('DOMContentLoaded', () => {
-        loadTrack(trackIndex);
-    });
-
-    // Qo'shiqni yuklash funksiyasi
-    function loadTrack(index) {
-        const track = playlist[index];
-        trackName.innerText = track.name;
-        trackArtist.innerText = track.artist;
-        trackImage.src = track.img;
-        mainAudio.src = track.src;
+    // --- DARK / LIGHT MODE ---
+    function toggleTheme() {
+        const currentTheme = document.documentElement.getAttribute('data-theme');
+        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', newTheme);
+        localStorage.setItem('admin_theme', newTheme);
+        document.getElementById('themeBtn').innerText = newTheme === 'dark' ? '☀️ Kun' : '🌙 Tun';
+    }
+    // Dastlabki mavzuni tiklash
+    if(localStorage.getItem('admin_theme') === 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark');
+        document.getElementById('themeBtn').innerText = '☀️ Kun';
     }
 
-    // Play / Pause boshqaruvi
-    function togglePlay() {
-        if (isPlaying) {
-            pauseTrack();
-        } else {
-            playTrack();
-        }
-    }
-
-    function playTrack() {
-        isPlaying = true;
-        playPauseBtn.innerText = "⏸";
-        playerContainer.classList.add('playing');
-        mainAudio.play();
-    }
-
-    function pauseTrack() {
-        isPlaying = false;
-        playPauseBtn.innerText = "▶";
-        playerContainer.classList.remove('playing');
-        mainAudio.pause();
-    }
-
-    // Keyingi va oldingi qo'shiqqa o'tish
-    function nextTrack() {
-        if (isShuffle) {
-            // Tasodifiy rejim yoqilgan bo'lsa
-            let randomIndex;
-            do {
-                randomIndex = Math.floor(Math.random() * playlist.length);
-            } while (randomIndex === trackIndex);
-            trackIndex = randomIndex;
-        } else {
-            // Oddiy tartibda o'tish
-            trackIndex = (trackIndex + 1) % playlist.length;
-        }
-        loadTrack(trackIndex);
-        playTrack();
-    }
-
-    function prevTrack() {
-        trackIndex = (trackIndex - 1 + playlist.length) % playlist.length;
-        loadTrack(trackIndex);
-        playTrack();
-    }
-
-    // Progress bar va vaqtni yangilash
-    mainAudio.addEventListener('timeupdate', (e) => {
-        const currentTime = e.target.currentTime;
-        const duration = e.target.duration;
+    // --- SIDEBAR VA NAVIGATSIYA ---
+    function switchPage(pageId) {
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.sidebar-menu li').forEach(li => li.classList.remove('active'));
         
-        if (duration) {
-            // Progress barni surish
-            const progressWidth = (currentTime / duration) * 100;
-            progressBar.style.width = `${progressWidth}%`;
+        document.getElementById(pageId + 'Page').classList.add('active');
+        event.currentTarget.classList.add('active');
+        
+        // Sarlavhani o'zgartirish
+        const titles = { dashboard: '📊 Dashboard', users: '👥 Foydalanuvchilar', products: '📦 Mahsulotlar' };
+        document.getElementById('pageTitle').innerText = titles[pageId];
 
-            // Vaqtni hisoblash (Joriy vaqt)
-            let currentMin = Math.floor(currentTime / 60);
-            let currentSec = Math.floor(currentTime % 60);
-            if (currentSec < 10) currentSec = `0${currentSec}`;
-            currentTimeText.innerText = `${currentMin}:${currentSec}`;
+        // Mobil qurilmada sidebar yopilishi uchun
+        document.getElementById('sidebar').classList.remove('open');
+        
+        if(pageId === 'dashboard') updateDashboard();
+    }
 
-            // Umumiy vaqt (Duration)
-            let totalMin = Math.floor(duration / 60);
-            let totalSec = Math.floor(duration % 60);
-            if (totalSec < 10) totalSec = `0${totalSec}`;
-            durationText.innerText = `${totalMin}:${totalSec}`;
-        }
-    });
+    function toggleSidebar() {
+        document.getElementById('sidebar').classList.toggle('open');
+    }
 
-    // Progress barni bosib o'tkazish (Click orqali)
-    progressArea.addEventListener('click', (e) => {
-        const progressWidthval = progressArea.clientWidth; 
-        const clickedOffsetX = e.offsetX; 
-        const songDuration = mainAudio.duration; 
+    // --- DASHBOARD OPERATSIYALARI ---
+    function updateDashboard() {
+        document.getElementById('dashUsersCount').innerText = users.length;
+        document.getElementById('dashProductsCount').innerText = products.length;
+        const totalStock = products.reduce((sum, item) => sum + parseInt(item.stock), 0);
+        document.getElementById('dashTotalStock').innerText = totalStock;
+    }
 
-        if (songDuration) {
-            mainAudio.currentTime = (clickedOffsetX / progressWidthval) * songDuration;
-            if (!isPlaying) playTrack();
-        }
-    });
-
-    // Ovoz balandligini boshqarish
-    volumeSlider.addEventListener('input', (e) => {
-        mainAudio.volume = e.target.value;
-    });
-
-    // Repeat rejimini yoqish/o'chirish
-    repeatBtn.addEventListener('click', () => {
-        isRepeat = !isRepeat;
-        if (isRepeat) {
-            isShuffle = false;
-            shuffleBtn.classList.remove('active-mode');
-            repeatBtn.classList.add('active-mode');
+    // --- FOYDALANUVCHILAR CRUD MATRITSA ---
+    const userForm = document.getElementById('userForm');
+    
+    function renderUsers() {
+        const tbody = document.getElementById('usersTableBody');
+        tbody.innerHTML = '';
+        if(users.length === 0) {
+            document.getElementById('usersEmpty').style.display = 'block';
         } else {
-            repeatBtn.classList.remove('active-mode');
+            document.getElementById('usersEmpty').style.display = 'none';
+            users.forEach(user => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${user.userName}</td>
+                    <td>${user.userEmail}</td>
+                    <td>
+                        <button class="actions-btn btn-success" onclick="editUser('${user.id}')">✏️</button>
+                        <button class="actions-btn btn-danger" onclick="deleteUser('${user.id}')">🗑️</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
         }
-    });
+        localStorage.setItem('admin_users', JSON.stringify(users));
+        updateDashboard();
+    }
 
-    // Shuffle rejimini yoqish/o'chirish
-    shuffleBtn.addEventListener('click', () => {
-        isShuffle = !isShuffle;
-        if (isShuffle) {
-            isRepeat = false;
-            repeatBtn.classList.remove('active-mode');
-            shuffleBtn.classList.add('active-mode');
+    userForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const id = document.getElementById('userId').value;
+        const name = document.getElementById('userName').value.trim();
+        const email = document.getElementById('userEmail').value.trim();
+
+        if(isEditing) {
+            users = users.map(u => u.id === id ? { ...u, userName: name, userEmail: email } : u);
+            resetUserForm();
         } else {
-            shuffleBtn.classList.remove('active-mode');
+            users.push({ id: Date.now().toString(), userName: name, userEmail: email });
         }
+        userForm.reset();
+        renderUsers();
     });
 
-    // Qo'shiq tugaganda nima bo'lishi
-    mainAudio.addEventListener('ended', () => {
-        if (isRepeat) {
-            mainAudio.currentTime = 0;
-            playTrack();
+    function editUser(id) {
+        const user = users.find(u => u.id === id);
+        if(!user) return;
+        document.getElementById('userId').value = user.id;
+        document.getElementById('userName').value = user.userName;
+        document.getElementById('userEmail').value = user.userEmail;
+        
+        isEditing = true;
+        document.getElementById('formTitle').innerText = "Foydalanuvchini tahrirlash";
+        document.getElementById('userSubmitBtn').innerText = "Saqlash";
+        document.getElementById('cancelEditBtn').style.display = 'inline-block';
+    }
+
+    function deleteUser(id) {
+        if(confirm("Ushbu foydalanuvchini o'chirishni tasdiqlaysizmi?")) {
+            users = users.filter(u => u.id !== id);
+            if(document.getElementById('userId').value === id) resetUserForm();
+            renderUsers();
+        }
+    }
+
+    function resetUserForm() {
+        isEditing = false;
+        userForm.reset();
+        document.getElementById('userId').value = '';
+        document.getElementById('formTitle').innerText = "Yangi foydalanuvchi qo'shish";
+        document.getElementById('userSubmitBtn').innerText = "Qo'shish";
+        document.getElementById('cancelEditBtn').style.display = 'none';
+    }
+
+    // --- MAHSULOTLAR (QIDIRUV VA FILTR) ---
+    function renderProducts() {
+        const tbody = document.getElementById('productsTableBody');
+        const searchValue = document.getElementById('prodSearch').value.toLowerCase();
+        const filterValue = document.getElementById('prodFilter').value;
+        
+        tbody.innerHTML = '';
+
+        const filtered = products.filter(p => {
+            const matchesSearch = p.name.toLowerCase().includes(searchValue);
+            const matchesFilter = filterValue === 'all' || p.category === filterValue;
+            return matchesSearch && matchesFilter;
+        });
+
+        if(filtered.length === 0) {
+            document.getElementById('productsEmpty').style.display = 'block';
         } else {
-            nextTrack();
+            document.getElementById('productsEmpty').style.display = 'none';
+            filtered.forEach(p => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td>${p.name}</td><td>${p.category}</td><td><b>${p.stock} ta</b></td>`;
+                tbody.appendChild(tr);
+            });
         }
-    });
+        localStorage.setItem('admin_products', JSON.stringify(products));
+        updateDashboard();
+    }
 
-    // Tugma hodisalari
-    playPauseBtn.addEventListener('click', togglePlay);
-    nextBtn.addEventListener('click', nextTrack);
-    prevBtn.addEventListener('click', prevTrack);
+    // Dasturni dastlabki ishga tushirish
+    updateDashboard();
+    renderUsers();
+    renderProducts();
 </script>
-
 </body>
 </html>
-Kod qanday shartlarni bajardi?
-Play / Pause: Markazdagi doira shaklidagi tugma qo'shiqni qo'yadi (mainAudio.play()) va to'xtatadi.
+Kod tarkibidagi asosiy yechimlar:
+Sidebar navigatsiya: Chap qismdagi menyular orqali sahifalar (Dashboard, Foydalanuvchilar, Mahsulotlar) o'rtasida display: none / block mantiqiy ssenariysi yordamida silliq o'tiladi.
+
+Dashboard: Umumiy dinamik hisoblagichlar joylashtirilgan. Foydalanuvchi qo'shilganda yoki o'chirilganda, u yerdagi raqamlar ham real vaqtda o'zgaradi.
+
+To'liq CRUD (Foydalanuvchilar): Jadvalda ko'rsatish, yangi qo'shish, o'chirish (confirm orqali) va tahrirlash (ma'lumotlarni formaga qayta yuklash) funksiyalari to'liq ishlaydi.
+
+Qidiruv va Filtr (Mahsulotlar): Real vaqt rejimida ham inputga yozish, ham select (kategoriya) elementini o'zgartirish orqali kombinatsiyalashgan qidiruv tizimi ishlaydi.
+
+Light/Dark Mode: CSS o'zgaruvchilari (--bg-color, --panel-bg) yordamida tugma bosilganda sahifa ranglari bir lahzada silliq almashadi.
+
+Xotira (localStorage): Kiritilgan barcha o'zgarishlar va tanlangan rejim brauzer xotirasida mukammal saqlanib qoladi.
