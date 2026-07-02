@@ -1,7 +1,5 @@
 # js-loyihalar-2
 
-Mana, barcha talablarga to'liq javob beradigan, zamonaviy va funksional Todo App (Vazifalar menejeri) ilovasi. Kodlar bitta HTML faylga jamlangan, uni osongina ishga tushirishingiz mumkin.
-
 HTML, CSS va JavaScript kodi
 HTML
 <!DOCTYPE html>
@@ -9,7 +7,7 @@ HTML
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Todo App — Intizom</title>
+    <title>Moliya Tracker — Balans Nazorati</title>
     <style>
         * {
             margin: 0;
@@ -19,7 +17,7 @@ HTML
         }
 
         body {
-            background: #f0f4f8;
+            background-color: #f4f6f9;
             min-height: 100vh;
             display: flex;
             justify-content: center;
@@ -27,306 +25,338 @@ HTML
             padding: 20px;
         }
 
-        .todo-container {
+        .tracker-container {
             background: white;
             padding: 30px;
             border-radius: 16px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
             width: 100%;
-            max-width: 480px;
+            max-width: 500px;
         }
 
-        h2 {
+        h2, h3 {
             color: #1e293b;
             margin-bottom: 20px;
             text-align: center;
         }
 
-        /* Input va Qo'shish tugmasi */
-        .input-group {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
+        /* Dashbord (Balans, Daromad, Xarajat paneli) */
+        .balance-section {
+            text-align: center;
+            margin-bottom: 25px;
         }
 
-        .input-group input {
+        .balance-title {
+            font-size: 0.9rem;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .balance-amount {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: #0f172a;
+            margin-top: 5px;
+        }
+
+        .stats-container {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .stat-box {
             flex: 1;
-            padding: 12px 16px;
-            border: 2px solid #e2e8f0;
+            background: #f8fafc;
+            padding: 15px;
+            border-radius: 12px;
+            text-align: center;
+            border: 1px solid #e2e8f0;
+        }
+
+        .stat-box.income h4 { color: #10b981; }
+        .stat-box.expense h4 { color: #ef4444; }
+
+        .stat-amount {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-top: 5px;
+            color: #334155;
+        }
+
+        /* Forma dizayni */
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 30px;
+            background: #f8fafc;
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .form-group input, .form-group select {
+            padding: 12px;
+            border: 1px solid #cbd5e1;
             border-radius: 8px;
             font-size: 1rem;
             outline: none;
-            transition: border-color 0.2s;
         }
 
-        .input-group input:focus {
+        .form-group input:focus, .form-group select:focus {
             border-color: #3b82f6;
         }
 
-        .add-btn {
-            padding: 12px 20px;
+        .submit-btn {
+            padding: 12px;
             background: #3b82f6;
             color: white;
             border: none;
             border-radius: 8px;
             font-weight: 600;
+            font-size: 1rem;
             cursor: pointer;
             transition: background 0.2s;
         }
 
-        .add-btn:hover {
+        .submit-btn:hover {
             background: #2563eb;
         }
 
-        /* Filtr tugmalari */
-        .filter-group {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 20px;
-        }
-
-        .filter-btn {
-            flex: 1;
-            padding: 8px;
-            border: 1px solid #e2e8f0;
-            background: #f8fafc;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 0.9rem;
-            color: #64748b;
-            font-weight: 500;
-            transition: all 0.2s;
-        }
-
-        .filter-btn.active {
-            background: #3b82f6;
-            color: white;
-            border-color: #3b82f6;
-        }
-
-        /* Vazifalar ro'yxati */
-        .todo-list {
+        /* Tranzaksiyalar ro'yxati */
+        .history-list {
             list-style: none;
             display: flex;
             flex-direction: column;
             gap: 10px;
+            max-height: 250px;
+            overflow-y: auto;
+            padding-right: 5px;
         }
 
-        .todo-item {
+        .transaction-item {
             display: flex;
-            align-items: center;
             justify-content: space-between;
-            padding: 12px 16px;
-            background: #f8fafc;
-            border-radius: 8px;
-            border: 1px solid #e2e8f0;
-            transition: all 0.2s;
-        }
-
-        .todo-item.completed {
-            background: #f1f5f9;
-            opacity: 0.7;
-        }
-
-        .todo-left {
-            display: flex;
             align-items: center;
-            gap: 12px;
-            flex: 1;
+            padding: 12px 16px;
+            background: white;
+            border-radius: 8px;
+            border-left: 5px solid #cbd5e1;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+            position: relative;
         }
 
-        .todo-text {
-            font-size: 1rem;
+        /* Ranglar farqi */
+        .transaction-item.income-type {
+            border-left-color: #10b981;
+        }
+
+        .transaction-item.expense-type {
+            border-left-color: #ef4444;
+        }
+
+        .tx-details {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .tx-text {
+            font-weight: 500;
             color: #334155;
-            word-break: break-word;
         }
 
-        .todo-item.completed .todo-text {
-            text-decoration: line-through;
-            color: #94a3b8;
+        .tx-amount {
+            font-weight: 600;
         }
 
-        .delete-btn {
+        .income-type .tx-amount { color: #10b981; }
+        .expense-type .tx-amount { color: #ef4444; }
+
+        .delete-tx-btn {
             background: transparent;
             border: none;
-            color: #ef4444;
+            color: #94a3b8;
             cursor: pointer;
+            font-size: 1.2rem;
             font-weight: bold;
-            font-size: 1.1rem;
             padding: 4px 8px;
-            border-radius: 4px;
-            transition: background 0.2s;
+            transition: color 0.2s;
         }
 
-        .delete-btn:hover {
-            background: #fee2e2;
-        }
-
-        /* Motivatsion xabar */
-        .empty-message {
-            text-align: center;
-            padding: 30px 10px;
-            color: #64748b;
-            font-style: italic;
-            font-size: 0.95rem;
-            line-height: 1.5;
+        .delete-tx-btn:hover {
+            color: #ef4444;
         }
     </style>
 </head>
 <body>
 
-    <div class="todo-container">
-        <h2>Mening Vazifalarim</h2>
+    <div class="tracker-container">
+        <h2>Moliya Tracker</h2>
 
-        <div class="input-group">
-            <input type="text" id="todoInput" placeholder="Yangi vazifa kiriting...">
-            <button class="add-btn" id="addBtn">Qo'shish</button>
+        <div class="balance-section">
+            <div class="balance-title">Jami Balans</div>
+            <div class="balance-amount" id="totalBalance">0 SO'M</div>
         </div>
 
-        <div class="filter-group">
-            <button class="filter-btn active" data-filter="all">Barchasi</button>
-            <button class="filter-btn" data-filter="pending">Kutilayotgan</button>
-            <button class="filter-btn" data-filter="completed">Bajarilgan</button>
+        <div class="stats-container">
+            <div class="stat-box income">
+                <h4>Daromad</h4>
+                <div class="stat-amount" id="totalIncome">0 SO'M</div>
+            </div>
+            <div class="stat-box expense">
+                <h4>Xarajat</h4>
+                <div class="stat-amount" id="totalExpense">0 SO'M</div>
+            </div>
         </div>
 
-        <ul class="todo-list" id="todoList"></ul>
+        <h3>Yangi Tranzaksiya</h3>
+        <form id="txForm" class="form-group">
+            <input type="text" id="txText" placeholder="Tranzaksiya nomi (Masalan: Oylik, Supermarket...)" required>
+            <input type="number" id="txAmount" placeholder="Summa (SO'M)" min="1" required>
+            <select id="txType">
+                <option value="income">Daromad (+)</option>
+                <option value="expense">Xarajat (-)</option>
+            </select>
+            <button type="submit" class="submit-btn">Qo'shish</button>
+        </form>
+
+        <h3>Tranzaksiyalar Ro'yxati</h3>
+        <ul class="history-list" id="historyList"></ul>
     </div>
 
     <script>
         // DOM Elementlari
-        const todoInput = document.getElementById('todoInput');
-        const addBtn = document.getElementById('addBtn');
-        const todoList = document.getElementById('todoList');
-        const filterButtons = document.querySelectorAll('.filter-btn');
+        const txForm = document.getElementById('txForm');
+        const txText = document.getElementById('txText');
+        const txAmount = document.getElementById('txAmount');
+        const txType = document.getElementById('txType');
+        const historyList = document.getElementById('historyList');
 
-        // LocalStorage'dan ma'lumotlarni yuklash yoki bo'sh massiv olish
-        let todos = JSON.parse(localStorage.getItem('todos')) || [];
-        let currentFilter = 'all';
+        const totalBalance = document.getElementById('totalBalance');
+        const totalIncome = document.getElementById('totalIncome');
+        const totalExpense = document.getElementById('totalExpense');
 
-        // Motivatsion xabarlar ro'yxati
-        const motivations = [
-            "✨ Hech qanday vazifa yo'q! Katta ishlarni boshlashning ayni vaqti.",
-            "🚀 Rejalar ro'yxati bo'sh. Kuningizni samarali rejalashtiring!",
-            "🎯 Hammasi bajarildi! O'zingizga dam bering yoki yangi marralarni ko'zlang.",
-            "🌅 Toza ro'yxat — toza zehn. Yangi vazifalar qo'shishga tayyormisiz?"
-        ];
+        // LocalStorage'dan ma'lumotlarni yuklash
+        let transactions = JSON.parse(localStorage.getItem('transactions')) || [];
 
-        // Tasodifiy motivatsiya tanlash
-        function getRandomMotivation() {
-            return motivations[Math.floor(Math.random() * motivations.length)];
+        // ==========================================
+        //  HISOBLASH LOGIKASI (Alohida funksiyalar)
+        // ==========================================
+        
+        // 1. Umumiy daromadni hisoblash
+        function calculateIncome() {
+            return transactions
+                .filter(tx => tx.type === 'income')
+                .reduce((sum, tx) => sum + tx.amount, 0);
         }
 
-        // Vazifalarni ekranga render qilish
-        function renderTodos() {
-            todoList.innerHTML = '';
+        // 2. Umumiy xarajatni hisoblash
+        function calculateExpense() {
+            return transactions
+                .filter(tx => tx.type === 'expense')
+                .reduce((sum, tx) => sum + tx.amount, 0);
+        }
 
-            // Filtrlash mantiqi
-            const filteredTodos = todos.filter(todo => {
-                if (currentFilter === 'pending') return !todo.completed;
-                if (currentFilter === 'completed') return todo.completed;
-                return true; // 'all' bo'lsa hammasi
-            });
+        // 3. Jami balansni hisoblash
+        function calculateBalance(income, expense) {
+            return income - expense;
+        }
 
-            // Agar ro'yxat bo'sh bo'lsa motivatsion xabar ko'rsatish
-            if (filteredTodos.length === 0) {
-                const emptyDiv = document.createElement('div');
-                emptyDiv.className = 'empty-message';
-                emptyDiv.textContent = getRandomMotivation();
-                todoList.appendChild(emptyDiv);
-                return;
-            }
+        // Dashbord UI (ekran) qismini yangilash
+        function updateDashboardUI() {
+            const income = calculateIncome();
+            const expense = calculateExpense();
+            const balance = calculateBalance(income, expense);
 
-            // Elementlarni yaratish
-            filteredTodos.forEach(todo => {
+            totalIncome.textContent = `${income.toLocaleString()} SO'M`;
+            totalExpense.textContent = `${expense.toLocaleString()} SO'M`;
+            totalBalance.textContent = `${balance.toLocaleString()} SO'M`;
+            
+            // Balans minusga kirib ketsa qizil rangda ko'rsatish
+            totalBalance.style.color = balance >= 0 ? '#0f172a' : '#ef4444';
+        }
+
+        // ==========================================
+        //  RENDER VA ASOSIY AMALLAR LOGIKASI
+        // ==========================================
+
+        // Tranzaksiyalar ro'yxatini render qilish
+        function renderTransactions() {
+            historyList.innerHTML = '';
+
+            transactions.forEach(tx => {
                 const li = document.createElement('li');
-                li.className = `todo-item ${todo.completed ? 'completed' : ''}`;
+                const sign = tx.type === 'income' ? '+' : '-';
+                
+                // Ranglar farqi uchun klass qo'shish
+                li.className = `transaction-item ${tx.type}-type`;
 
                 li.innerHTML = `
-                    <div class="todo-left">
-                        <input type="checkbox" ${todo.completed ? 'checked' : ''} onchange="toggleTodo(${todo.id})">
-                        <span class="todo-text">${todo.text}</span>
+                    <div class="tx-details">
+                        <span class="tx-text">${tx.text}</span>
                     </div>
-                    <button class="delete-btn" onclick="deleteTodo(${todo.id})">×</button>
+                    <div>
+                        <span class="tx-amount">${sign}${tx.amount.toLocaleString()} SO'M</span>
+                        <button class="delete-tx-btn" onclick="deleteTransaction(${tx.id})">×</button>
+                    </div>
                 `;
 
-                todoList.appendChild(li);
+                historyList.appendChild(li);
             });
         }
 
-        // Yangi vazifa qo'shish funksiyasi
-        function addTodo() {
-            const text = todoInput.value.trim();
-            
-            // Validatsiya (Bo'sh bo'lmasligi kerak)
-            if (text === '') return;
+        // Yangi tranzaksiya qo'shish
+        txForm.addEventListener('submit', (e) => {
+            e.preventDefault();
 
-            const newTodo = {
-                id: Date.now(), // Noyob ID
-                text: text,
-                completed: false
+            const newTransaction = {
+                id: Date.now(),
+                text: txText.value.trim(),
+                amount: parseFloat(txAmount.value),
+                type: txType.value
             };
 
-            todos.push(newTodo);
+            transactions.push(newTransaction);
             saveToStorage();
-            renderTodos();
-            todoInput.value = ''; // Inputni tozalash
-        }
+            init();
 
-        // Bajarilgan/Bajarilmagan holatga o'tkazish
-        window.toggleTodo = function(id) {
-            todos = todos.map(todo => {
-                if (todo.id === id) {
-                    return { ...todo, completed: !todo.completed };
-                }
-                return todo;
-            });
+            // Formani tozalash
+            txText.value = '';
+            txAmount.value = '';
+        });
+
+        // Tranzaksiyani o'chirish
+        window.deleteTransaction = function(id) {
+            transactions = transactions.filter(tx => tx.id !== id);
             saveToStorage();
-            renderTodos();
+            init();
         };
 
-        // Vazifani o'chirish
-        window.deleteTodo = function(id) {
-            todos = todos.filter(todo => todo.id !== id);
-            saveToStorage();
-            renderTodos();
-        };
-
-        // Ma'lumotni saqlash
+        // Ma'lumotlarni localStorage'da saqlash
         function saveToStorage() {
-            localStorage.setItem('todos', JSON.stringify(todos));
+            localStorage.setItem('transactions', JSON.stringify(transactions));
         }
 
-        // Hodisalarni bog'lash (Tugma va Enter)
-        addBtn.addEventListener('click', addTodo);
-        todoInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') addTodo();
-        });
+        // Ilovani qayta yuklash / ishga tushirish funksiyasi
+        function init() {
+            renderTransactions();
+            updateDashboardUI();
+        }
 
-        // Filtr tugmalari bosilishi
-        filterButtons.forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                filterButtons.forEach(b => b.classList.remove('active'));
-                e.target.classList.add('active');
-                
-                currentFilter = e.target.getAttribute('data-filter');
-                renderTodos();
-            });
-        });
-
-        // Ilovani ilk bor yuklash
-        renderTodos();
+        // Dasturni ilk bor ishga tushirish
+        init();
     </script>
 </body>
 </html>
 Talablar qanday bajarildi?
-Vazifa qo'shish: Qo'shish tugmasi bosilganda yoki input ichida Enter klaviaturasi bosilganda xavfsiz tarzda (bo'sh joylar trim() orqali tozalanib) vazifa ro'yxatga qo'shiladi.
+Daromad va xarajat shakli: HTML ichida matnli input, raqamli summa kiritish inputi va turini tanlash (Daromad/Xarajat) uchun select elementi shakllantirildi.
 
-Checkbox orqali bajarilgan deb belgilash: Checkbox holati o'zgarganda (onchange) toggleTodo ishga tushadi, obyekt ichidagi completed qiymati teskarisiga o'zgaradi va matn chiziladi.
+Jami balans, daromad va xarajatlarni hisoblash: calculateIncome, calculateExpense va calculateBalance funksiyalari orqali xavfsiz hisob-kitob qilinadi hamda jami summa .toLocaleString() metodi yordamida chiroyli formatda (Masalan: 1,250,000 SO'M) ekranga chiqariladi.
 
-O'chirish: Har bir element yonidagi qizil × tugmasi deleteTodo funksiyasini chaqirib, massivdan o'sha idli elementni butunlay o'chiradi.
+Rang bilan ajratilgan ro'yxat: CSS yordamida tranzaksiya turi tekshirilib, agar u income bo'lsa yashil (#10b981), expense bo'lsa qizil (#ef4444) rangli hoshiyalar (border-left) va matn ranglari berildi.
 
-Filtrlash: Uchta rejim (Barchasi / Bajarilgan / Kutilayotgan) massivning .filter() metodi yordamida real vaqtda saralanadi.
+Tranzaksiyani o'chirish: Har bir element yonidagi × tugmasi deleteTransaction(id) funksiyasini chaqiradi va massivdan tegishli elementni o'chirib, hisob-kitobni qayta yangilaydi.
 
-localStorage: Barcha amallardan keyin (qo'shish, o'chirish, o'zgartirish) saveToStorage() funksiyasi ishlab, ma'lumotlarni brauzer xotirasiga yozib qo'yadi. Sahifa yangilansa ham ma'lumot yo'qolmaydi.
-
-Motivatsion xabar: Agar joriy filtr bo'yicha yoki umuman ro'yxatda vazifa qolmagan bo'lsa, motivations massividan tasodifiy (Math.random()) chiroyli va ruhlantiruvchi gap chiqib turadi.
+localStorage: Har safar yangi tranzaksiya kiritilganda yoki o'chirilganda o'zgarishlar localStorage.setItem
